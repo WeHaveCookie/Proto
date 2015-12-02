@@ -1,6 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <stdlib.h>
-#include "Character.hpp"
+#include "include/Character.hpp"
 
 int main()
 {

@@ -1,4 +1,4 @@
-#include "Character.hpp"
+#include "../include/Character.hpp"
 
 Character::Character(std::string path)
 {
