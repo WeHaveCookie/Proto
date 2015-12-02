@@ -7,6 +7,7 @@ class Engine
     public:
         Engine();
         virtual ~Engine();
+        bool collisionAABB(AABB box1, AABB box2);
     protected:
     private:
 };

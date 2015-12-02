@@ -3,7 +3,7 @@
 Character::Character(std::string path)
 {
     m_gravity = DEFAULT_GRAVITY;
-    m_speed = DEFAUTL_SPEED;
+    m_speed = DEFAULT_SPEED;
     // On charge la texture
     if(!m_texture.loadFromFile(defaultCharPath+path)){
         //RAISE A LOAD TEXTURE EXCEPTION
