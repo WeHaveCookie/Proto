@@ -1,21 +1,15 @@
 #ifndef STRUCTURE_H
 #define STRUCTURE_H
-
-
-struct AABB
-{
-    float x;
-    float y;
-    float w;
-    float h;
-};
+#include <list>
+#include <SFML/Graphics.hpp>
 
 struct QuadTree
 {
-    AABB bbox;
+    sf::Vector2f bbox;
     QuadTree* child[4];
-    list<sf::Sprite*> objects;
+    std::list<sf::Sprite*> objects;
 };
+
 
 
 #endif // STRUCTURE_H

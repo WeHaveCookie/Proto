@@ -22,6 +22,14 @@ Character::~Character()
     //dtor
 }
 
+/**
+* \fn draw(sf::RenderWindow* window)
+*
+* \brief Draw character on window
+*
+* \param window : The RenderWindow
+* \return void
+**/
 void Character::draw(sf::RenderWindow* window)
 // TODO : Fonction qui permet de dessiner le personnage dans la fenetre
 {
@@ -29,9 +37,47 @@ void Character::draw(sf::RenderWindow* window)
     window->draw(m_sprite);
 }
 
+/**
+* \fn update(sf::RenderWindow* window)
+*
+* \brief Update character on window
+*
+* \param window : The RenderWindow
+* \return void
+**/
 void Character::update(sf::RenderWindow* window)
 // TODO : Fonction qui permet de mettre à jour le personnage dans la fenetre
 {
-
+    m_sprite.setPosition(m_position);
 }
+
+/**
+* \fn move(sf::Vector2f motion)
+*
+* \brief Move character if possible and correct
+*
+* \param motion : Motion Vector, universe : Quadtree which represents world
+* \return void
+**/
+void Character::move(sf::Vector2f motion, Quadtree* universe)
+{
+    if (Engine::move(m_sprite.getGlobalBounds(),motion,universe))
+    {
+        m_position += motion;
+    }
+}
+
+
+/**
+* \fn jump(sf::Vector2f motion)
+*
+* \brief Jump character if possible and correct
+*
+* \param motion : Motion Vector, universe : Quadtree which represents world
+* \return void
+**/
+/*void Character::jump(sf::Vector2f motion, Quadtree* universe)
+{
+
+}*/
 
