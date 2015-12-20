@@ -6,7 +6,7 @@
 #define DEFAULT_SPEED 1
 
 // Constant for Quadtree
-#define MAX_SEGMENT 10
+#define QUAD_NODE_CAPACITY 10
 
 std::string const defaultCharPath = "Ressources/Character/";
 

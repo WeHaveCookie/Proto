@@ -1,8 +1,9 @@
 #ifndef QUADTREE_H
 #define QUADTREE_H
 
-#include <list>
+#include <vector>
 #include "Structure.hpp"
+#include "Engine.hpp"
 
 
 class Quadtree
@@ -10,13 +11,21 @@ class Quadtree
 
     public:
         Quadtree();
-        Quadtree(std::list<sf::Sprite*> obj);
+        Quadtree(std::vector<sf::Sprite*> obj);
         virtual ~Quadtree();
-        void addObject(std::list<sf::Sprite*> obj);
-        void delObjectAt(sf::Vector2f pos);
+        bool add(sf::Sprite* obj);
+        bool del(sf::Vector2f pos);
+        std::vector<sf::Sprite*>  queryRange(sf::Sprite* obj);
     protected:
     private:
-        QuadTree* m_quadtree;
+        void subdivide();
+
+        QuadTree* m_northWest;
+        QuadTree* m_northEast;
+        QuadTree* m_southWest;
+        QuadTree* m_southEast;
+        std::vector<sf::Sprite*> m_elements;
+        sf::FloatRect m_boundary;
 };
 
 #endif // QUADTREE_H
