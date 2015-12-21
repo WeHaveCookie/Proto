@@ -34,9 +34,17 @@ bool Engine::collisionAABB(sf::FloatRect box1, sf::FloatRect box2)
 * \param box1 : The AABB to test, motion : Motion Vector, universe : Quadtree which represents world
 * \return True if the movement of box1 by motion is correct. False otherwise
 **/
-bool Engine::move(sf::FloatRect box1, sf::Vector2f motion, Quadtree* universe)
+bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
 {// TODO
-    return true;
+    box1.setPosition(box1.getPosition()+motion);
+    std::vector<sf::Sprite*> listObject = universe->queryRange(&box1);
+    if(listObject.size() == 0)
+    {
+        return true;
+    } else {
+        return false;
+    }
+
 }
 
 /**

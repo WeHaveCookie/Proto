@@ -8,7 +8,12 @@
 // Constant for Quadtree
 #define QUAD_NODE_CAPACITY 10
 
+// Cnonstant for Sprite
+#define SPRITE_WIDTH 32
+#define SPRITE_HEIGHT 32
+
 std::string const defaultCharPath = "Ressources/Character/";
+std::string const defaultTilePath = "Ressources/Tileset/";
 
 
 #endif // CONSTANTES_HPP

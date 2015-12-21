@@ -9,7 +9,7 @@ class Engine
         Engine();
         virtual ~Engine();
         bool collisionAABB(sf::FloatRect box1, sf::FloatRect box2);
-        static bool move(sf::FloatRect box1, sf::Vector2f motion, Quadtree* universe);
+        static bool move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe);
         /*bool jump(sf::FloatRect box1, sf::Vector2f motion, Quadtree* universe);*/
     protected:
     private:

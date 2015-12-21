@@ -61,7 +61,7 @@ void Character::update(sf::RenderWindow* window)
 **/
 void Character::move(sf::Vector2f motion, Quadtree* universe)
 {
-    if (Engine::move(m_sprite.getGlobalBounds(),motion,universe))
+    if (Engine::move(m_sprite,motion,universe))
     {
         m_position += motion;
     }
