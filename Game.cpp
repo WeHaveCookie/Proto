@@ -8,7 +8,7 @@
 
 int main()
 {
-    sf::RenderWindow* window = new sf::RenderWindow(sf::VideoMode(600, 600), "Proto Movement & Grabity", sf::Style::Default);
+    sf::RenderWindow* window = new sf::RenderWindow(sf::VideoMode(1920, 1080), "Proto Movement & Grabity", sf::Style::Default);
     window->setFramerateLimit(60);
 
     //Creation d'un personnage
@@ -78,6 +78,31 @@ int main()
                         {
                         case sf::Mouse::Left :
                             world->del(sf::Vector2f(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y));
+                            break;
+                        case sf::Mouse::Right:
+                            {
+                                std::vector<sf::Sprite*>* query = world->queryRange(sf::Vector2f(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y));
+                                std::cout << "*---------*" << std::endl;
+                                std::cout << "*  QUERY  *" << std::endl;
+                                std::cout << "*---------*" << std::endl;
+                                if(query->size() > 0)
+                                {
+                                    std::cout << "Il y a " << query->size() << " dans ce quadrant" << std::endl;
+                                    for(std::vector<sf::Sprite*>::iterator it = query->begin(); it != query->end(); it++)
+                                    {
+                                        std::cout << "Tile at [x=" << (*it)->getGlobalBounds().top << ":y=" << (*it)->getGlobalBounds().left << "]" << std::endl;
+                                    }
+                                } else
+                                {
+                                    std::cout << "Aucun tile dans le quadrant" << std::endl;
+                                }
+                                //delete query;
+                                std::cout << "*-------------*" << std::endl;
+                                std::cout << "*  FIN QUERY  *" << std::endl;
+                                std::cout << "*-------------*" << std::endl;
+                            }
+                            break;
+                        default:
                             break;
                         }
                     }

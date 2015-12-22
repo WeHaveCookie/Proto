@@ -75,8 +75,8 @@ bool Quadtree::add(sf::Sprite* obj)
             if(DEBUG)
             {
                 std::cout << "*--AJOUT--*" << std::endl;
-                std::cout << "Ajout : [x=" << obj->getGlobalBounds().top << ";y=" << obj->getGlobalBounds().left << ";width=" << obj->getGlobalBounds().width << ";height=" << obj->getGlobalBounds().height << "]" << std::endl;
-                std::cout << "dans le quad : [x=" << m_shape.top << ";y=" << m_shape.left << ";width=" << m_shape.width << ";height=" << m_shape.height << ":TAILLE=" << m_elements->size() << "]" << std::endl;
+                std::cout << "Ajout : [x=" << obj->getGlobalBounds().left << ";y=" << obj->getGlobalBounds().top << ";width=" << obj->getGlobalBounds().width << ";height=" << obj->getGlobalBounds().height << "]" << std::endl;
+                std::cout << "dans le quad : [x=" << m_shape.left << ";y=" << m_shape.top << ";width=" << m_shape.width << ";height=" << m_shape.height << ":TAILLE=" << m_elements->size() << "]" << std::endl;
                 std::cout << "*---FIN---*" << std::endl;
             }
             m_elements->push_back(obj);
@@ -121,8 +121,9 @@ bool Quadtree::add(sf::Sprite* obj)
 **/
 sf::Sprite* Quadtree::del(sf::Vector2f pos)
 {
+    sf::FloatRect posRect = sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT);
     sf::Sprite* delObject = NULL;
-    if(!m_shape.intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT))) {
+    if(!m_shape.intersects(posRect)) {
         return delObject;
     }
 
@@ -135,16 +136,16 @@ sf::Sprite* Quadtree::del(sf::Vector2f pos)
 
     if(m_elements->empty() && !m_enable)
     {
-        if(m_northWest->getShape().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
+        if(m_northWest->getShape().intersects(posRect))
         {
             delObject = m_northWest->del(pos);
-        } else if (m_northEast->getShape().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
+        } else if (m_northEast->getShape().intersects(posRect))
         {
             delObject = m_northEast->del(pos);
-        } else if (m_southWest->getShape().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
+        } else if (m_southWest->getShape().intersects(posRect))
         {
             delObject = m_southWest->del(pos);
-        } else if (m_southEast->getShape().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
+        } else if (m_southEast->getShape().intersects(posRect))
         {
             delObject = m_southEast->del(pos);
         }
@@ -161,7 +162,7 @@ sf::Sprite* Quadtree::del(sf::Vector2f pos)
     {
         for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
         {
-            if((*it)->getGlobalBounds().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
+            if((*it)->getGlobalBounds().intersects(posRect))
             {
                 delObject = *it;
                 m_elements->erase(it);
@@ -174,43 +175,68 @@ sf::Sprite* Quadtree::del(sf::Vector2f pos)
 
 /**
 *
-* \fn queryRange(sf::Sprite* obj)
+* \fn queryRange(sf::Vector2f pos)
 *
 * \brief Search and return the vector of element around obj
 *
 * \param obj : The object on which we want to make query
 * \return vector of element around obj. Return NULL if obj is not in quadrant
 **/
-std::vector<sf::Sprite*> Quadtree::queryRange(sf::Sprite* obj)
-{
-    std::vector<sf::Sprite*> elements;
-    if(!m_shape.intersects(obj->getGlobalBounds()))
+std::vector<sf::Sprite*>* Quadtree::queryRange(sf::Vector2f pos)
+{ // TODO : Gerer la query lorsque la demande est a l'interstice de plusieurs quadrant
+    if(DEBUG)
     {
-        return elements;
+        std::cout << "*--------------*" << std::endl;
+        std::cout << "* START QUERY  *" << std::endl;
+        std::cout << "*--------------*" << std::endl;
+        std::cout << "Query at [x=" << pos.x << ";y=" << pos.y << ";width=" << SPRITE_WIDTH << ";height=" << SPRITE_HEIGHT << "]" << std::endl;
     }
-
-    for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
+    sf::FloatRect posRect = sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT);
+    std::vector<sf::Sprite*>* answer = new std::vector<sf::Sprite*>;
+    if(!m_shape.intersects(posRect))
     {
-        if(obj->getGlobalBounds().intersects((*it)->getGlobalBounds()))
+        return NULL;
+    }
+    if(m_enable)
+    {
+        answer = getElements();
+        return answer;
+    } else
+    {
+        std::vector<sf::Sprite*>* tmp = new std::vector<sf::Sprite*>;
+        if(m_northWest->getShape().intersects(posRect))
         {
-            elements.push_back(*it);
-        }
+            tmp = m_northWest->queryRange(pos);
+            if(tmp->size() > 0)
+            {
+                answer->insert(answer->end(),tmp->begin(),tmp->end());
+            }
 
-        if(m_northWest == NULL)
+        } else if (m_northEast->getShape().intersects(posRect))
         {
-            return elements;
+            tmp = m_northEast->queryRange(sf::Vector2f(pos.x+SPRITE_WIDTH,pos.y));
+            if(tmp->size() > 0)
+            {
+                answer->insert(answer->end(),tmp->begin(),tmp->end());
+            }
+
+        } else if (m_southWest->getShape().intersects(posRect))
+        {
+            tmp = m_southWest->queryRange(sf::Vector2f(pos.x,pos.y+SPRITE_HEIGHT));
+            if(tmp->size() > 0)
+            {
+                answer->insert(answer->end(),tmp->begin(),tmp->end());
+            }
+
+        } else if (m_southEast->getShape().intersects(posRect))
+        {
+            tmp = m_southEast->queryRange(sf::Vector2f(pos.x+SPRITE_WIDTH,pos.y+SPRITE_HEIGHT));
+            if(tmp->size() > 0)
+            {
+                answer->insert(answer->end(),tmp->begin(),tmp->end());
+            }
         }
-
-        std::vector<sf::Sprite*> query = m_northWest->queryRange(obj);
-        elements.insert(elements.end(),query.begin(),query.end());
-        query = m_northEast->queryRange(obj);
-        elements.insert(elements.end(),query.begin(),query.end());
-        query = m_southWest->queryRange(obj);
-        elements.insert(elements.end(),query.begin(),query.end());
-        query = m_southEast->queryRange(obj);
-        elements.insert(elements.end(),query.begin(),query.end());
-
-        return elements;
+        return answer;
     }
 }
 
@@ -285,7 +311,6 @@ void Quadtree::merge()
         std::cout << "*  MERGE  *" << std::endl;
         std::cout << "*---------*" << std::endl;
     }
-    //std::vector<sf::Sprite*> tmp;
     m_elements = new std::vector<sf::Sprite*>;
     m_elements->reserve(m_northWest->getElements()->size()+m_northEast->getElements()->size()+m_southWest->getElements()->size()+m_southEast->getElements()->size());
     m_elements->insert(m_elements->end(),m_northWest->getElements()->begin(),m_northWest->getElements()->end());
@@ -343,7 +368,8 @@ void Quadtree::clear()
         }
         m_elements->clear();
     }
-        {
+    if(DEBUG)
+    {
         std::cout << "*----------------*" << std::endl;
         std::cout << "*  FIN DU CLEAR  *" << std::endl;
         std::cout << "*----------------*" << std::endl << std::endl;
@@ -398,4 +424,16 @@ void Quadtree::displayTile(bool b)
         m_southWest->displayTile(b);
         m_southEast->displayTile(b);
     }
+}
+
+int Quadtree::nbElement()
+{
+    if(m_enable)
+    {
+        return m_elements->size();
+    } else
+    {
+        return m_northWest->nbElement() + m_northEast->nbElement() + m_southWest->nbElement() + m_southEast->nbElement();
+    }
+
 }

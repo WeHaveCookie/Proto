@@ -21,7 +21,7 @@ class Quadtree
         //virtual ~Quadtree();
         bool add(sf::Sprite* obj);
         sf::Sprite* del(sf::Vector2f pos);
-        std::vector<sf::Sprite*>  queryRange(sf::Sprite* obj);
+        std::vector<sf::Sprite*>*  queryRange(sf::Vector2f pos);
         inline sf::FloatRect getShape() {return m_shape;}
 
         void clear();
@@ -31,7 +31,7 @@ class Quadtree
 
     protected:
         inline bool isEmpty() {return m_elements->empty();}
-        inline int nbElement() {return m_elements->size();}
+        int nbElement();
         inline std::vector<sf::Sprite*>* getElements() {return m_elements;}
     private:
         void subdivide();

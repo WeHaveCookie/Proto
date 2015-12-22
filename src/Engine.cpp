@@ -20,10 +20,10 @@ Engine::~Engine()
 **/
 bool Engine::collisionAABB(sf::FloatRect box1, sf::FloatRect box2)
 {
-    return (box2.left >= box1.left + box1.width) ||
-        (box2.left  + box2.width <= box1.width) ||
+    return !((box2.left >= box1.left + box1.width) ||
+        (box2.left  + box2.width <= box1.left) ||
         (box2.top >= box1.top + box1.height) ||
-        (box2.top + box2.height <= box1.top);
+        (box2.top + box2.height <= box1.top));
 }
 
 /**
@@ -36,15 +36,45 @@ bool Engine::collisionAABB(sf::FloatRect box1, sf::FloatRect box2)
 **/
 bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
 {// TODO
+    if(DEBUG)
+    {
+        std::cout << "*-----------------*" << std::endl;
+        std::cout << "*  ENGINE : MOVE  *" << std::endl;
+        std::cout << "*-----------------*" << std::endl;
+    }
+    sf::Vector2f initPos = box1.getPosition();
+    box1.setPosition(initPos+motion);
+    // TODO : gerer la collision quand le char est entre 2-3-4 quad
+    std::vector<sf::Sprite*>* listObject = universe->queryRange(box1.getPosition());
+    if(listObject->size() > 0)
+    {
+        std::cout << "Il y a " << listObject->size() << " en possible collision" << std::endl;
+        for(std::vector<sf::Sprite*>::iterator it = listObject->begin(); it != listObject->end(); it++)
+        {
+           if(collisionAABB((*it)->getGlobalBounds(),box1.getGlobalBounds()))
+           {
+               std::cout << "*-----------*" << std::endl;
+               std::cout << "  COLLISION  " << std::endl;
+               std::cout << "*-----------*" << std::endl;
+               std::cout << "Char : [x=" << box1.getGlobalBounds().left << ";y=" << box1.getGlobalBounds().top << ";width=" << box1.getGlobalBounds().width << ";height=" << box1.getGlobalBounds().height <<  "]" << std::endl;
+               std::cout << "Tile : [x=" << (*it)->getGlobalBounds().left << ";y=" << (*it)->getGlobalBounds().top << ";width=" << (*it)->getGlobalBounds().width << ";height=" << (*it)->getGlobalBounds().height << "]" << std::endl;
+               return false;
+           }
+        }
+    }
+    std::cout << "Pas de collision " << std::endl;
+    return true;
+
+    /*
     box1.setPosition(box1.getPosition()+motion);
-    std::vector<sf::Sprite*> listObject = universe->queryRange(&box1);
-    if(listObject.size() == 0)
+    std::vector<sf::Sprite*>* listObject = universe->queryRange(box1.getPosition());
+    if(listObject->size() == 0)
     {
         return true;
     } else {
         return false;
     }
-
+*/
 }
 
 /**
