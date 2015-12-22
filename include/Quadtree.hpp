@@ -10,7 +10,7 @@
 #include "Constante.hpp"
 //#include "Engine.hpp"
 
-#define DEBUG 0
+#define DEBUG 1
 class Quadtree
 {
 
@@ -26,19 +26,25 @@ class Quadtree
 
         void clear();
         void draw(sf::RenderWindow* window);
+        void displayTile(bool b);
+        inline bool isDisplayTile() {return m_displayTile;}
 
     protected:
+        inline bool isEmpty() {return m_elements->empty();}
+        inline int nbElement() {return m_elements->size();}
+        inline std::vector<sf::Sprite*>* getElements() {return m_elements;}
     private:
-
         void subdivide();
+        void merge();
         Quadtree* m_northWest;
         Quadtree* m_northEast;
         Quadtree* m_southWest;
         Quadtree* m_southEast;
-        std::vector<sf::Sprite*> m_elements;
+        std::vector<sf::Sprite*>* m_elements;
         sf::RectangleShape m_boundary;
         sf::FloatRect m_shape;
         bool m_enable;
+        bool m_displayTile;
 };
 
 #endif // QUADTREE_H

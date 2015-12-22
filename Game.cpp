@@ -23,7 +23,7 @@ int main()
     //world->subdivide();
     //world->add(&spr);
     sf::Texture txt;
-    sf::Sprite* spr = (sf::Sprite*) malloc(sizeof(sf::Sprite));
+    sf::Sprite* spr;
     if(!txt.loadFromFile(defaultTilePath+"Tileset.png")){
         //RAISE A LOAD TEXTURE EXCEPTION
     }
@@ -47,15 +47,38 @@ int main()
                                 break;
                             case sf::Keyboard::J :
                                 {
-                                    spr = (sf::Sprite*) malloc(sizeof(sf::Sprite));
+                                    spr = new sf::Sprite;
                                     spr->setTexture(txt);
                                     spr->setTextureRect(sf::IntRect(416,192,SPRITE_HEIGHT,SPRITE_WIDTH));
                                     spr->setPosition(rand()%window->getSize().x,rand()%window->getSize().y);
                                     world->add(spr);
                                 }
                                 break;
+                            case sf::Keyboard::K :
+                                {
+                                    if(world->isDisplayTile()) {
+                                        world->displayTile(false);
+                                    } else
+                                    {
+                                        world->displayTile(true);
+                                    }
+                                }
+                                break;
+                            case sf::Keyboard::C :
+                                world->clear();
+                                break;
                             default :
                                 break;
+                        }
+                    }
+                    break;
+                case sf::Event::MouseButtonPressed :
+                    {
+                        switch(event.mouseButton.button)
+                        {
+                        case sf::Mouse::Left :
+                            world->del(sf::Vector2f(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y));
+                            break;
                         }
                     }
                     break;

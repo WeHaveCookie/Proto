@@ -8,22 +8,25 @@ Quadtree::Quadtree(float x, float y, float width, float height)
     m_boundary.setOutlineThickness(1.0f);
     m_boundary.setOutlineColor(sf::Color::Green);
     m_shape = sf::FloatRect(x,y,width,height);
-    m_elements = std::vector<sf::Sprite*>();
+    m_elements = new std::vector<sf::Sprite*>;
+    m_elements->reserve(sizeof(std::vector<sf::Sprite*>)*QUAD_NODE_CAPACITY);
     m_northWest = NULL;
     m_northEast = NULL;
     m_southWest = NULL;
     m_southEast = NULL;
     m_enable = true;
+    m_displayTile = true;
 }
 
 Quadtree::~Quadtree()
 {
-    if(!m_elements.empty()) {
+    if(!m_enable) {
         delete m_northWest;
         delete m_northEast;
         delete m_southWest;
         delete m_southEast;
     }
+    delete m_elements;
 }
 
 
@@ -67,20 +70,20 @@ bool Quadtree::add(sf::Sprite* obj)
         return false;
     } else
     {
-        if (m_elements.size() < QUAD_NODE_CAPACITY && m_enable)
+        if (m_elements->size() < QUAD_NODE_CAPACITY && m_enable)
         {
             if(DEBUG)
             {
                 std::cout << "*--AJOUT--*" << std::endl;
                 std::cout << "Ajout : [x=" << obj->getGlobalBounds().top << ";y=" << obj->getGlobalBounds().left << ";width=" << obj->getGlobalBounds().width << ";height=" << obj->getGlobalBounds().height << "]" << std::endl;
-                std::cout << "dans le quad : [x=" << m_shape.top << ";y=" << m_shape.left << ";width=" << m_shape.width << ";height=" << m_shape.height << ":TAILLE=" << m_elements.size() << "]" << std::endl;
+                std::cout << "dans le quad : [x=" << m_shape.top << ";y=" << m_shape.left << ";width=" << m_shape.width << ";height=" << m_shape.height << ":TAILLE=" << m_elements->size() << "]" << std::endl;
                 std::cout << "*---FIN---*" << std::endl;
             }
-            m_elements.push_back(obj);
+            m_elements->push_back(obj);
             return true;
         } else
         {
-            if(m_elements.size() >= QUAD_NODE_CAPACITY && m_enable)
+            if(m_elements->size() >= QUAD_NODE_CAPACITY && m_enable)
             {
                 subdivide();
             }
@@ -123,33 +126,50 @@ sf::Sprite* Quadtree::del(sf::Vector2f pos)
         return delObject;
     }
 
-    if(m_elements.empty())
+
+    /*if(!m_enable && m_northWest->isEmpty() && m_northEast->isEmpty() && m_southWest->isEmpty() && m_southEast->isEmpty())
+    {
+        clear();
+    }*/
+
+
+    if(m_elements->empty() && !m_enable)
     {
         if(m_northWest->getShape().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
         {
-            return m_northWest->del(pos);
+            delObject = m_northWest->del(pos);
         } else if (m_northEast->getShape().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
         {
-            return m_northEast->del(pos);
+            delObject = m_northEast->del(pos);
         } else if (m_southWest->getShape().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
         {
-            return m_southWest->del(pos);
+            delObject = m_southWest->del(pos);
         } else if (m_southEast->getShape().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
         {
-            return m_southEast->del(pos);
+            delObject = m_southEast->del(pos);
         }
+        if(DEBUG)
+        {
+            std::cout << "-- Nbr Elem : " << m_northWest->nbElement() + m_northEast->nbElement() + m_southWest->nbElement() + m_southEast->nbElement() << "--" << std::endl;
+        }
+        if((m_northWest->nbElement() + m_northEast->nbElement() + m_southWest->nbElement() + m_southEast->nbElement()) <= QUAD_NODE_CAPACITY)
+        {
+           merge();
+        }
+        return delObject;
     } else
     {
-        for(std::vector<sf::Sprite*>::iterator it = m_elements.begin(); it != m_elements.end(); it++)
+        for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
         {
             if((*it)->getGlobalBounds().intersects(sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT)))
             {
                 delObject = *it;
-                m_elements.erase(it);
+                m_elements->erase(it);
                 return delObject;
             }
         }
     }
+    return delObject;
 }
 
 /**
@@ -169,7 +189,7 @@ std::vector<sf::Sprite*> Quadtree::queryRange(sf::Sprite* obj)
         return elements;
     }
 
-    for(std::vector<sf::Sprite*>::iterator it = m_elements.begin(); it != m_elements.end(); it++)
+    for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
     {
         if(obj->getGlobalBounds().intersects((*it)->getGlobalBounds()))
         {
@@ -215,20 +235,29 @@ void Quadtree::subdivide()
     m_northEast = new Quadtree(m_shape.left+(m_shape.width/2.0f), m_shape.top, m_shape.width/2.0f, m_shape.height/2.0f);
     m_southWest = new Quadtree(m_shape.left, m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f);
     m_southEast = new Quadtree(m_shape.left+(m_shape.width/2.0f), m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f);
-    if(!m_elements.empty())
+    if(!m_elements->empty())
     {
         if(DEBUG)
         {
             //std::cout << "Le quad maitre à des elements" << std::endl;
         }
-        for(std::vector<sf::Sprite*>::iterator it = m_elements.begin(); it != m_elements.end(); it++)
+        for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
         {
-            m_northWest->add(*it);
-            m_northEast->add(*it);
-            m_southWest->add(*it);
-            m_southEast->add(*it);
+            if(m_northWest->getShape().intersects((*it)->getGlobalBounds()))
+            {
+                m_northWest->add(*it);
+            } else if (m_northEast->getShape().intersects((*it)->getGlobalBounds()))
+            {
+                m_northEast->add(*it);
+            } else if (m_southWest->getShape().intersects((*it)->getGlobalBounds()))
+            {
+                m_southWest->add(*it);
+            } else if (m_southEast->getShape().intersects((*it)->getGlobalBounds()))
+            {
+                m_southEast->add(*it);
+            }
         }
-        m_elements.clear();
+        m_elements->clear();
         if(DEBUG)
         {
             std::cout << "*-------------------------*" << std::endl;
@@ -237,6 +266,39 @@ void Quadtree::subdivide()
         }
     }
     m_enable = false;
+}
+
+/**
+*
+* \fn merge()
+*
+* \brief Merge the quadtree when Sum(child element) < QUAD_NODE_CAPACITY
+*
+* \param
+* \return void
+**/
+void Quadtree::merge()
+{
+    if(DEBUG)
+    {
+        std::cout << "*---------*" << std::endl;
+        std::cout << "*  MERGE  *" << std::endl;
+        std::cout << "*---------*" << std::endl;
+    }
+    //std::vector<sf::Sprite*> tmp;
+    m_elements = new std::vector<sf::Sprite*>;
+    m_elements->reserve(m_northWest->getElements()->size()+m_northEast->getElements()->size()+m_southWest->getElements()->size()+m_southEast->getElements()->size());
+    m_elements->insert(m_elements->end(),m_northWest->getElements()->begin(),m_northWest->getElements()->end());
+    m_elements->insert(m_elements->end(),m_northEast->getElements()->begin(),m_northEast->getElements()->end());
+    m_elements->insert(m_elements->end(),m_southWest->getElements()->begin(),m_southWest->getElements()->end());
+    m_elements->insert(m_elements->end(),m_southEast->getElements()->begin(),m_southEast->getElements()->end());
+    clear();
+    if(DEBUG)
+    {
+        std::cout << "*----------------*" << std::endl;
+        std::cout << "*  END OF MERGE  *" << std::endl;
+        std::cout << "*----------------*" << std::endl;
+    }
 }
 
 /**
@@ -250,13 +312,41 @@ void Quadtree::subdivide()
 **/
 void Quadtree::clear()
 {
-    if(m_elements.empty()) {
+    if(DEBUG)
+    {
+        std::cout << "*----------------*" << std::endl;
+        std::cout << "* DEBUT DU CLEAR *" << std::endl;
+        std::cout << "*----------------*" << std::endl;
+    }
+    if(!m_enable) {
         m_northWest->clear();
         m_northEast->clear();
         m_southWest->clear();
         m_southEast->clear();
+        if(DEBUG)
+        {
+            std::cout << "*--ON DELETE--*" << std::endl;
+        }
+        delete m_northWest;
+        delete m_northEast;
+        delete m_southWest;
+        delete m_southEast;
+        m_northWest = NULL;
+        m_northEast = NULL;
+        m_southWest = NULL;
+        m_southEast = NULL;
+        m_enable = true;
     } else {
-        m_elements.clear();
+        if(DEBUG)
+        {
+            std::cout << "*--CLEAR--*" << std::endl;
+        }
+        m_elements->clear();
+    }
+        {
+        std::cout << "*----------------*" << std::endl;
+        std::cout << "*  FIN DU CLEAR  *" << std::endl;
+        std::cout << "*----------------*" << std::endl << std::endl;
     }
 }
 
@@ -272,7 +362,7 @@ void Quadtree::clear()
 void Quadtree::draw(sf::RenderWindow* window)
 {
     window->draw(m_boundary);
-    if(m_elements.empty() && m_northWest != NULL && m_northEast != NULL && m_southWest != NULL && m_southEast != NULL)
+    if(m_elements->empty() && m_northWest != NULL && m_northEast != NULL && m_southWest != NULL && m_southEast != NULL)
     {
         m_northWest->draw(window);
         m_northEast->draw(window);
@@ -280,11 +370,32 @@ void Quadtree::draw(sf::RenderWindow* window)
         m_southEast->draw(window);
     } else
     {
-        for(std::vector<sf::Sprite*>::iterator it = m_elements.begin(); it != m_elements.end(); it++)
+        if(m_displayTile)
         {
-            window->draw(**it);
+            for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
+            {
+                window->draw(**it);
+            }
         }
     }
 }
 
-
+/**
+*
+* \fn void displayCase(bool b)
+*
+* \brief Set if tree display tile or not
+*
+* \param b : True for display tile, false otherwise
+* \return void
+**/
+void Quadtree::displayTile(bool b)
+{
+    m_displayTile = b;
+    if(!m_enable) {
+        m_northWest->displayTile(b);
+        m_northEast->displayTile(b);
+        m_southWest->displayTile(b);
+        m_southEast->displayTile(b);
+    }
+}
