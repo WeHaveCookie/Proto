@@ -10,7 +10,7 @@
 #include "Constante.hpp"
 //#include "Engine.hpp"
 
-#define DEBUG 1
+#define DEBUG 0
 class Quadtree
 {
 
@@ -20,8 +20,8 @@ class Quadtree
         //Quadtree(std::vector<sf::Sprite*> obj);
         //virtual ~Quadtree();
         bool add(sf::Sprite* obj);
-        sf::Sprite* del(sf::Vector2f pos);
-        std::vector<sf::Sprite*>*  queryRange(sf::Vector2f pos);
+        sf::Sprite* del(sf::FloatRect pos);
+        std::vector<sf::Sprite*>*  queryRange(sf::FloatRect pos);
         inline sf::FloatRect getShape() {return m_shape;}
 
         void clear();

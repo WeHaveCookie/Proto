@@ -3,7 +3,7 @@
 #include "Structure.hpp"
 #include "Quadtree.hpp"
 
-#define DEBUG 1
+#define DEBUG 0
 
 class Engine
 {

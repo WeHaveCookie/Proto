@@ -77,11 +77,11 @@ int main()
                         switch(event.mouseButton.button)
                         {
                         case sf::Mouse::Left :
-                            world->del(sf::Vector2f(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y));
+                            world->del(sf::FloatRect(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y,32,32));
                             break;
                         case sf::Mouse::Right:
                             {
-                                std::vector<sf::Sprite*>* query = world->queryRange(sf::Vector2f(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y));
+                                std::vector<sf::Sprite*>* query = world->queryRange(sf::FloatRect(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y,32,32));
                                 std::cout << "*---------*" << std::endl;
                                 std::cout << "*  QUERY  *" << std::endl;
                                 std::cout << "*---------*" << std::endl;
@@ -115,22 +115,22 @@ int main()
         // On gère les event clavier hors du catch pour permettre la fluidite des deplacements
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
         {
-            player->move(sf::Vector2f(1,0),world);
+            player->move(sf::Vector2f(5,0),world);
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
         {
-            player->move(sf::Vector2f(-1,0),world);
+            player->move(sf::Vector2f(-5,0),world);
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
         {
-            player->move(sf::Vector2f(0,-1),world);
+            player->move(sf::Vector2f(0,-5),world);
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
-            player->move(sf::Vector2f(0,1),world);
+            player->move(sf::Vector2f(0,5),world);
         }
 
 

@@ -112,18 +112,18 @@ bool Quadtree::add(sf::Sprite* obj)
 
 /**
 *
-* \fn del(sf::Vector2f pos)
+* \fn del(sf::FloatRect pos)
 *
 * \brief Delete a object from Quadtree at position pos
 *
 * \param pos : The position of the object to be deleted
 * \return the deleted object
 **/
-sf::Sprite* Quadtree::del(sf::Vector2f pos)
+sf::Sprite* Quadtree::del(sf::FloatRect pos)
 {
-    sf::FloatRect posRect = sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT);
+    //sf::FloatRect posRect = sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT);
     sf::Sprite* delObject = NULL;
-    if(!m_shape.intersects(posRect)) {
+    if(!m_shape.intersects(pos)) {
         return delObject;
     }
 
@@ -136,16 +136,16 @@ sf::Sprite* Quadtree::del(sf::Vector2f pos)
 
     if(m_elements->empty() && !m_enable)
     {
-        if(m_northWest->getShape().intersects(posRect))
+        if(m_northWest->getShape().intersects(pos))
         {
             delObject = m_northWest->del(pos);
-        } else if (m_northEast->getShape().intersects(posRect))
+        } else if (m_northEast->getShape().intersects(pos))
         {
             delObject = m_northEast->del(pos);
-        } else if (m_southWest->getShape().intersects(posRect))
+        } else if (m_southWest->getShape().intersects(pos))
         {
             delObject = m_southWest->del(pos);
-        } else if (m_southEast->getShape().intersects(posRect))
+        } else if (m_southEast->getShape().intersects(pos))
         {
             delObject = m_southEast->del(pos);
         }
@@ -162,7 +162,7 @@ sf::Sprite* Quadtree::del(sf::Vector2f pos)
     {
         for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
         {
-            if((*it)->getGlobalBounds().intersects(posRect))
+            if((*it)->getGlobalBounds().intersects(pos))
             {
                 delObject = *it;
                 m_elements->erase(it);
@@ -175,27 +175,39 @@ sf::Sprite* Quadtree::del(sf::Vector2f pos)
 
 /**
 *
-* \fn queryRange(sf::Vector2f pos)
+* \fn queryRange(sf::FloatRect pos)
 *
 * \brief Search and return the vector of element around obj
 *
 * \param obj : The object on which we want to make query
 * \return vector of element around obj. Return NULL if obj is not in quadrant
 **/
-std::vector<sf::Sprite*>* Quadtree::queryRange(sf::Vector2f pos)
-{ // TODO : Gerer la query lorsque la demande est a l'interstice de plusieurs quadrant
+std::vector<sf::Sprite*>* Quadtree::queryRange(sf::FloatRect pos)
+{ // WARNING : La collision lorsque le char n'intersect pas le quadrant n'est pas géré
     if(DEBUG)
     {
         std::cout << "*--------------*" << std::endl;
         std::cout << "* START QUERY  *" << std::endl;
         std::cout << "*--------------*" << std::endl;
-        std::cout << "Query at [x=" << pos.x << ";y=" << pos.y << ";width=" << SPRITE_WIDTH << ";height=" << SPRITE_HEIGHT << "]" << std::endl;
+        std::cout << "Query at [x=" << pos.left << ";y=" << pos.top << ";width=" << pos.width << ";height=" << pos.height << "]" << std::endl;
+        std::cout << "On shape [x=" << m_shape.left << ";y=" << m_shape.top << ";width=" << m_shape.width << ";height=" << m_shape.height << "]" << std::endl;
     }
-    sf::FloatRect posRect = sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT);
     std::vector<sf::Sprite*>* answer = new std::vector<sf::Sprite*>;
-    if(!m_shape.intersects(posRect))
+    if(DEBUG)
     {
-        return NULL;
+        std::cout << "answer create" << std::endl;
+    }
+    if(!m_shape.intersects(pos))
+    {
+        if(DEBUG)
+        {
+            std::cout << "*******************" << std::endl;
+            std::cout << "*-----------------*" << std::endl;
+            std::cout << "not in shape ! O.o" << std::endl;
+            std::cout << "*-----------------*" << std::endl;
+            std::cout << "*******************" << std::endl;
+        }
+        return answer;
     }
     if(m_enable)
     {
@@ -203,35 +215,42 @@ std::vector<sf::Sprite*>* Quadtree::queryRange(sf::Vector2f pos)
         return answer;
     } else
     {
+        if(DEBUG)
+        {
+            std::cout << "Le quad [x=" << m_shape.left << ";y=" << m_shape.top << ";width=" << m_shape.width << ":height=" << m_shape.height << "] !enable, on recherche dans les fils" << std::endl;
+        }
         std::vector<sf::Sprite*>* tmp = new std::vector<sf::Sprite*>;
-        if(m_northWest->getShape().intersects(posRect))
+        if(m_northWest->getShape().intersects(pos))
         {
             tmp = m_northWest->queryRange(pos);
-            if(tmp->size() > 0)
+            if(tmp != NULL)
             {
                 answer->insert(answer->end(),tmp->begin(),tmp->end());
             }
 
-        } else if (m_northEast->getShape().intersects(posRect))
+        }
+        if (m_northEast->getShape().intersects(pos))
         {
-            tmp = m_northEast->queryRange(sf::Vector2f(pos.x+SPRITE_WIDTH,pos.y));
-            if(tmp->size() > 0)
+            tmp = m_northEast->queryRange(sf::FloatRect(pos));
+            if(tmp != NULL)
             {
                 answer->insert(answer->end(),tmp->begin(),tmp->end());
             }
 
-        } else if (m_southWest->getShape().intersects(posRect))
+        }
+        if (m_southWest->getShape().intersects(pos))
         {
-            tmp = m_southWest->queryRange(sf::Vector2f(pos.x,pos.y+SPRITE_HEIGHT));
-            if(tmp->size() > 0)
+            tmp = m_southWest->queryRange(sf::FloatRect(pos));
+            if(tmp != NULL)
             {
                 answer->insert(answer->end(),tmp->begin(),tmp->end());
             }
 
-        } else if (m_southEast->getShape().intersects(posRect))
+        }
+        if (m_southEast->getShape().intersects(pos))
         {
-            tmp = m_southEast->queryRange(sf::Vector2f(pos.x+SPRITE_WIDTH,pos.y+SPRITE_HEIGHT));
-            if(tmp->size() > 0)
+            tmp = m_southEast->queryRange(sf::FloatRect(pos));
+            if(tmp != NULL)
             {
                 answer->insert(answer->end(),tmp->begin(),tmp->end());
             }
