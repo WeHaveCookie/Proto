@@ -17,8 +17,8 @@ int main()
 
     //Pour la creation de case random
     srand(time(NULL));
-
-    std::vector<sf::Sprite*> vectCase;
+    bool m_add = true;
+    //std::vector<sf::Sprite*> vectCase;
 
     //world->subdivide();
     //world->add(&spr);
@@ -67,6 +67,9 @@ int main()
                             case sf::Keyboard::C :
                                 world->clear();
                                 break;
+                            case sf::Keyboard::A :
+                                (m_add)?m_add = false:m_add = true;
+                                break;
                             default :
                                 break;
                         }
@@ -77,7 +80,19 @@ int main()
                         switch(event.mouseButton.button)
                         {
                         case sf::Mouse::Left :
-                            world->del(sf::FloatRect(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y,32,32));
+                            {
+                                if(m_add)
+                                {
+                                    spr = new sf::Sprite;
+                                    spr->setTexture(txt);
+                                    spr->setTextureRect(sf::IntRect(416,192,SPRITE_HEIGHT,SPRITE_WIDTH));
+                                    spr->setPosition(sf::Vector2f(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y));
+                                    world->add(spr);
+                                } else
+                                {
+                                    world->del(sf::FloatRect(sf::Mouse::getPosition(*window).x,sf::Mouse::getPosition(*window).y,32,32));
+                                }
+                            }
                             break;
                         case sf::Mouse::Right:
                             {

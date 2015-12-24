@@ -55,17 +55,11 @@ Quadtree::~Quadtree()
 **/
 bool Quadtree::add(sf::Sprite* obj)
 {
-    if(DEBUG)
-    {
-        //std::cout << "*--AJOUT--*" << std::endl;
-        //std::cout << "Current quad : [x=" << m_shape.top << ";y=" << m_shape.left << ";width=" << m_shape.width << ";height=" << m_shape.height << "]" << std::endl;
-        //std::cout << "Ajout : [x=" << obj->getGlobalBounds().top << ";y=" << obj->getGlobalBounds().left << ";width=" << obj->getGlobalBounds().width << ";height=" << obj->getGlobalBounds().height << "]" << std::endl;
-    }
     if (!m_shape.intersects(obj->getGlobalBounds()))
     {
         if(DEBUG)
         {
-            //std::cout << "l'elem n'est pas dans le quad" << std::endl;
+            std::cout << "l'elem n'est pas dans le quad" << std::endl;
         }
         return false;
     } else
@@ -88,24 +82,210 @@ bool Quadtree::add(sf::Sprite* obj)
                 subdivide();
             }
 
-            if(m_northWest->add(obj))
-            {
-                return true;
-            }
-            if (m_northEast->add(obj))
-            {
-                return true;
-            }
-            if (m_southWest->add(obj))
-            {
-                return true;
-            }
-            if (m_southEast->add(obj))
-            {
-                return true;
-            }
-        }
+            sf::IntRect textRect = obj->getTextureRect();
+            sf::FloatRect bound = obj->getGlobalBounds();
 
+            if(m_northWest->getShape().intersects(obj->getGlobalBounds()))
+            {
+                // On verifie si le tile est entre les quadrants NW et SW
+                if(m_southWest->getShape().intersects(obj->getGlobalBounds()))
+                {
+                    // On verifie si le tile est entre tout les quadrants
+                    if(m_southEast->getShape().intersects(obj->getGlobalBounds()) && m_northEast->getShape().intersects(obj->getGlobalBounds()))
+                    {
+                        /** Il faut couper le tile en 4 et l'ajouter dans les 4 quadrants **/
+                        if(DEBUG)
+                        {
+                            std::cout << "Tile intersect NW - NE - SW - SE"<< std::endl;
+                        }
+                        sf::Sprite* spriteNW = new sf::Sprite;
+                        sf::Sprite* spriteNE = new sf::Sprite;
+                        sf::Sprite* spriteSW = new sf::Sprite;
+                        sf::Sprite* spriteSE = new sf::Sprite;
+                        spriteNW->setTexture(*obj->getTexture());
+                        spriteNE->setTexture(*obj->getTexture());
+                        spriteSW->setTexture(*obj->getTexture());
+                        spriteSE->setTexture(*obj->getTexture());
+
+                        // x = x
+                        // y = y
+                        // w = NW.w-x
+                        // h = NW.h-y
+                        spriteNW->setTextureRect(sf::IntRect(textRect.left,
+                                                             textRect.top,
+                                                             m_northWest->getShape().width - bound.left,
+                                                             m_northWest->getShape().height - bound.top));
+                        spriteNW->setPosition(sf::Vector2f(bound.left,bound.top));
+
+                        // x = NE.x
+                        // y = y
+                        // w = w - (NW.w-x)
+                        // h = NE.h - y
+                        spriteNE->setTextureRect(sf::IntRect(textRect.left + (m_northWest->getShape().width - bound.left),
+                                                             textRect.top,
+                                                             textRect.width - (m_northWest->getShape().width - bound.left),
+                                                             m_northEast->getShape().height - bound.top));
+                        spriteNE->setPosition(sf::Vector2f(m_northEast->getShape().left,bound.top));
+
+                        // x = x
+                        // y = SW.y
+                        // w = SW.w - x
+                        // h = h - (NW.h - y)
+                        spriteSW->setTextureRect(sf::IntRect(textRect.left,
+                                                             textRect.top + (m_northWest->getShape().height - bound.top),
+                                                             m_southWest->getShape().width - bound.left,
+                                                             textRect.height - (m_northWest->getShape().height - bound.top)));
+                        spriteSW->setPosition(sf::Vector2f(bound.left,m_southWest->getShape().top));
+
+                        // x = SE.x
+                        // y = SE.y
+                        // w = w - (NW.w - x)
+                        // h = h - (NW.h - y)
+                        spriteSE->setTextureRect(sf::IntRect(textRect.left + (m_northWest->getShape().width - bound.left),
+                                                             textRect.top + (m_northWest->getShape().height - bound.top),
+                                                             textRect.width - (m_northWest->getShape().width - bound.left),
+                                                             textRect.height - (m_northWest->getShape().height - bound.top)));
+                        spriteSE->setPosition(sf::Vector2f(m_southEast->getShape().left,m_southEast->getShape().top));
+
+                        // On ajoute les 4 sprites au quadrant correspondant
+                        m_northWest->add(spriteNW);
+                        m_northEast->add(spriteNE);
+                        m_southWest->add(spriteSW);
+                        m_southEast->add(spriteSE);
+                    } else  // Il est dans le quadrant NW et SW
+                    {
+                        /** Il faut couper le tile en 2 et l'ajouter dans les quadrants NW et SW**/
+                        if(DEBUG)
+                        {
+                            std::cout << "Tile intersect NW - SW"<< std::endl;
+                        }
+                        sf::Sprite* spriteNW = new sf::Sprite;
+                        sf::Sprite* spriteSW = new sf::Sprite;
+                        spriteNW->setTexture(*obj->getTexture());
+                        spriteSW->setTexture(*obj->getTexture());
+
+                        spriteNW->setTextureRect(sf::IntRect(textRect.left,
+                                                             textRect.top,
+                                                             textRect.width,
+                                                             m_northWest->getShape().height - bound.top));
+                        spriteNW->setPosition(sf::Vector2f(bound.left,bound.top));
+
+                        spriteSW->setTextureRect(sf::IntRect(textRect.left,
+                                                             textRect.top + (m_northWest->getShape().height - bound.top),
+                                                             textRect.width,
+                                                             textRect.height - (m_northWest->getShape().height - bound.top)));
+                        spriteSW->setPosition(sf::Vector2f(bound.left,m_southWest->getShape().top));
+
+                        m_northWest->add(spriteNW);
+                        m_southWest->add(spriteSW);
+                    } // On verifie si le tile est entre les quadrants NW et NE
+                } else if (m_northEast->getShape().intersects(obj->getGlobalBounds()))
+                {
+                    /** Il faut couper le tile en 2 et l'ajouter dans les quadrants NW et NE**/
+                    if(DEBUG)
+                        {
+                            std::cout << "Tile intersect NW - NE"<< std::endl;
+                        }
+                    sf::Sprite* spriteNW = new sf::Sprite;
+                    sf::Sprite* spriteNE = new sf::Sprite;
+                    spriteNW->setTexture(*obj->getTexture());
+                    spriteNE->setTexture(*obj->getTexture());
+
+                    spriteNW->setTextureRect(sf::IntRect(textRect.left,
+                                                         textRect.top,
+                                                         m_northWest->getShape().width - bound.left,
+                                                         textRect.height));
+                    spriteNW->setPosition(sf::Vector2f(sf::Vector2f(bound.left,bound.top)));
+
+
+                    spriteNE->setTextureRect(sf::IntRect(textRect.left + (m_northWest->getShape().width - bound.left),
+                                                         textRect.top,
+                                                         textRect.width - (m_northWest->getShape().width - bound.left),
+                                                         textRect.height));
+                    spriteNE->setPosition(sf::Vector2f(m_northEast->getShape().left,bound.top));
+
+                    m_northWest->add(spriteNW);
+                    m_northEast->add(spriteNE);
+                } else
+                { // Il est uniquement dans le quadrant NW
+                    m_northWest->add(obj);
+                }
+            } else if (m_northEast->getShape().intersects(obj->getGlobalBounds()))
+            {
+                // On verifie si le tile est entre les quadrants NE et SE
+                if(m_southEast->getShape().intersects(obj->getGlobalBounds()))
+                {
+                    /** Il faut couper le tile en 2 et le rajouter dans les quadrants NE et SE**/
+                    if(DEBUG)
+                    {
+                        std::cout << "Tile intersect NE - SE"<< std::endl;
+                    }
+                    sf::Sprite* spriteNE = new sf::Sprite;
+                    sf::Sprite* spriteSE = new sf::Sprite;
+                    spriteNE->setTexture(*obj->getTexture());
+                    spriteSE->setTexture(*obj->getTexture());
+
+                    spriteNE->setTextureRect(sf::IntRect(textRect.left,
+                                                         textRect.top,
+                                                         textRect.width,
+                                                         m_northEast->getShape().height - bound.top));
+                    spriteNE->setPosition(sf::Vector2f(bound.left,bound.top));
+
+
+                    spriteSE->setTextureRect(sf::IntRect(textRect.left,
+                                                         textRect.top + (m_northWest->getShape().height - bound.top),
+                                                         textRect.width,
+                                                         textRect.height - (m_northWest->getShape().height - bound.top)));
+                    spriteSE->setPosition(sf::Vector2f(bound.left,m_southEast->getShape().top));
+
+                    m_northEast->add(spriteNE);
+                    m_southEast->add(spriteSE);
+
+                } else // Il est uniquement dans le quadrant NE
+                {
+                    m_northEast->add(obj);
+                }
+            } else if (m_southWest->getShape().intersects(obj->getGlobalBounds()))
+            {
+                // On verifie si le tile est entre les quadrants SW et SE
+                if(m_southEast->getShape().intersects(obj->getGlobalBounds()))
+                {
+                    /** Il faut couper le tile en 2 et le rajouter dans les quadrants SW et SE**/
+                    if(DEBUG)
+                    {
+                        std::cout << "Tile intersect SW - SE"<< std::endl;
+                    }
+                    sf::Sprite* spriteSW = new sf::Sprite;
+                    sf::Sprite* spriteSE = new sf::Sprite;
+                    spriteSW->setTexture(*obj->getTexture());
+                    spriteSE->setTexture(*obj->getTexture());
+
+                    spriteSW->setTextureRect(sf::IntRect(textRect.left,
+                                                         textRect.top,
+                                                         m_southWest->getShape().width - bound.left,
+                                                         textRect.height));
+                    spriteSW->setPosition(sf::Vector2f(bound.left,bound.top));
+
+
+                    spriteSE->setTextureRect(sf::IntRect(textRect.left + (m_northWest->getShape().width - bound.left),
+                                                         textRect.top,
+                                                         textRect.width - (m_northWest->getShape().width - bound.left),
+                                                         textRect.height));
+                    spriteSE->setPosition(sf::Vector2f(m_southEast->getShape().left,bound.top));
+
+                    m_southWest->add(spriteSW);
+                    m_southEast->add(spriteSE);
+                } else // Il est uniquement dans le quadrant SW
+                {
+                    m_southWest->add(obj);
+                }
+            } else if (m_southEast->getShape().intersects(obj->getGlobalBounds()))
+            {
+                m_southEast->add(obj);
+            }
+
+            return true;
+        }
         return false;
     }
 }
@@ -126,13 +306,6 @@ sf::Sprite* Quadtree::del(sf::FloatRect pos)
     if(!m_shape.intersects(pos)) {
         return delObject;
     }
-
-
-    /*if(!m_enable && m_northWest->isEmpty() && m_northEast->isEmpty() && m_southWest->isEmpty() && m_southEast->isEmpty())
-    {
-        clear();
-    }*/
-
 
     if(m_elements->empty() && !m_enable)
     {
@@ -280,15 +453,16 @@ void Quadtree::subdivide()
     m_northEast = new Quadtree(m_shape.left+(m_shape.width/2.0f), m_shape.top, m_shape.width/2.0f, m_shape.height/2.0f);
     m_southWest = new Quadtree(m_shape.left, m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f);
     m_southEast = new Quadtree(m_shape.left+(m_shape.width/2.0f), m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f);
+    m_enable = false;
     if(!m_elements->empty())
     {
         if(DEBUG)
         {
-            //std::cout << "Le quad maitre à des elements" << std::endl;
+            std::cout << "Le quad maitre à des elements" << std::endl;
         }
         for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
         {
-            if(m_northWest->getShape().intersects((*it)->getGlobalBounds()))
+            /*if(m_northWest->getShape().intersects((*it)->getGlobalBounds()))
             {
                 m_northWest->add(*it);
             } else if (m_northEast->getShape().intersects((*it)->getGlobalBounds()))
@@ -300,7 +474,8 @@ void Quadtree::subdivide()
             } else if (m_southEast->getShape().intersects((*it)->getGlobalBounds()))
             {
                 m_southEast->add(*it);
-            }
+            }*/
+            add(*it);
         }
         m_elements->clear();
         if(DEBUG)
@@ -310,7 +485,7 @@ void Quadtree::subdivide()
             std::cout << "*-------------------------*" << std::endl;
         }
     }
-    m_enable = false;
+
 }
 
 /**
