@@ -28,6 +28,7 @@ class Quadtree
         void draw(sf::RenderWindow* window);
         void displayTile(bool b);
         inline bool isDisplayTile() {return m_displayTile;}
+        inline bool isEnable() {return m_enable;}
 
     protected:
         inline bool isEmpty() {return m_elements->empty();}

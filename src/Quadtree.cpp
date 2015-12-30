@@ -55,7 +55,8 @@ Quadtree::~Quadtree()
 **/
 bool Quadtree::add(sf::Sprite* obj)
 {
-    if (!m_shape.intersects(obj->getGlobalBounds()))
+    sf::FloatRect bound = obj->getGlobalBounds();
+    if (!m_shape.intersects(bound))
     {
         if(DEBUG)
         {
@@ -69,7 +70,7 @@ bool Quadtree::add(sf::Sprite* obj)
             if(DEBUG)
             {
                 std::cout << "*--AJOUT--*" << std::endl;
-                std::cout << "Ajout : [x=" << obj->getGlobalBounds().left << ";y=" << obj->getGlobalBounds().top << ";width=" << obj->getGlobalBounds().width << ";height=" << obj->getGlobalBounds().height << "]" << std::endl;
+                std::cout << "Ajout : [x=" << bound.left << ";y=" << bound.top << ";width=" << bound.width << ";height=" << bound.height << "]" << std::endl;
                 std::cout << "dans le quad : [x=" << m_shape.left << ";y=" << m_shape.top << ";width=" << m_shape.width << ";height=" << m_shape.height << ":TAILLE=" << m_elements->size() << "]" << std::endl;
                 std::cout << "*---FIN---*" << std::endl;
             }
@@ -82,70 +83,153 @@ bool Quadtree::add(sf::Sprite* obj)
                 subdivide();
             }
 
-            sf::IntRect textRect = obj->getTextureRect();
-            sf::FloatRect bound = obj->getGlobalBounds();
+            // On prepare la fragmentation du sprite
+            sf::IntRect tRect = obj->getTextureRect();
+            if(DEBUG)
+            {
+                std::cout << "*--------*" << std::endl;
+                std::cout << "*--FRAG--*" << std::endl;
+                std::cout << "*--------*" << std::endl;
+                std::cout << "tRect [x=" << tRect.left << ";y=" << tRect.top << ";w=" << tRect.width << ";h=" << tRect.height <<  "]" <<std::endl;
+            }
+            sf::IntRect tSpriteNW;
+            sf::IntRect tSpriteNE;
+            sf::IntRect tSpriteSW;
+            sf::IntRect tSpriteSE;
+            sf::Vector2f pSpriteNW;
+            sf::Vector2f pSpriteNE;
+            sf::Vector2f pSpriteSW;
+            sf::Vector2f pSpriteSE;
+            sf::FloatRect shapeNW = m_northWest->getShape();
+            sf::FloatRect shapeNE = m_northEast->getShape();
+            sf::FloatRect shapeSW = m_southWest->getShape();
+            sf::FloatRect shapeSE = m_southEast->getShape();
+            sf::Sprite* spriteNW = new sf::Sprite;
+            sf::Sprite* spriteNE = new sf::Sprite;
+            sf::Sprite* spriteSW = new sf::Sprite;
+            sf::Sprite* spriteSE = new sf::Sprite;
+            spriteNW->setTexture(*obj->getTexture());
+            spriteNE->setTexture(*obj->getTexture());
+            spriteSW->setTexture(*obj->getTexture());
+            spriteSE->setTexture(*obj->getTexture());
 
-            if(m_northWest->getShape().intersects(obj->getGlobalBounds()))
+            /////////////
+            //SPRITE NW//
+            /////////////
+            //////////////////////////////////////////////////////////////////////////////
+            tSpriteNW.left = tRect.left;
+            tSpriteNW.top = tRect.top;
+            pSpriteNW.x = bound.left;
+            pSpriteNW.y = bound.top;
+            spriteNW->setTextureRect(tSpriteNW);
+            spriteNW->setPosition(pSpriteNW);
+            //////////////////////////////////////////////////////////////////////////////
+
+            /////////////
+            //SPRITE NE//
+            /////////////
+            //////////////////////////////////////////////////////////////////////////////
+            tSpriteNE.top = tRect.top;
+            pSpriteNE.y = bound.top;
+            spriteNE->setTextureRect(tSpriteNE);
+            spriteNE->setPosition(pSpriteNE);
+            //////////////////////////////////////////////////////////////////////////////
+
+            /////////////
+            //SPRITE SW//
+            /////////////
+            //////////////////////////////////////////////////////////////////////////////
+            tSpriteSW.left = tRect.left;
+            pSpriteSW.x = bound.left;
+            spriteSW->setTextureRect(tSpriteSW);
+            spriteSW->setPosition(pSpriteSW);
+            //////////////////////////////////////////////////////////////////////////////
+
+            /////////////
+            //SPRITE SE//
+            /////////////
+            //////////////////////////////////////////////////////////////////////////////
+            spriteSE->setTextureRect(tSpriteSE);
+            spriteSE->setPosition(pSpriteSE);
+            //////////////////////////////////////////////////////////////////////////////
+
+            if(shapeNW.intersects(bound))
             {
                 // On verifie si le tile est entre les quadrants NW et SW
-                if(m_southWest->getShape().intersects(obj->getGlobalBounds()))
+                if(shapeSW.intersects(bound) && m_southWest->isEnable())
                 {
                     // On verifie si le tile est entre tout les quadrants
-                    if(m_southEast->getShape().intersects(obj->getGlobalBounds()) && m_northEast->getShape().intersects(obj->getGlobalBounds()))
+                    if(shapeSE.intersects(bound) && shapeNE.intersects(bound) && m_southEast->isEnable() && m_northEast->isEnable())
                     {
                         /** Il faut couper le tile en 4 et l'ajouter dans les 4 quadrants **/
                         if(DEBUG)
                         {
                             std::cout << "Tile intersect NW - NE - SW - SE"<< std::endl;
+                            std::cout << "ShapeNW = [x=" << shapeNW.left << ";y=" << shapeNW.top << ";w=" << shapeNW.width << ";h=" << shapeNW.height << "]" << std::endl;
+                            std::cout << "ShapeNE = [x=" << shapeNE.left << ";y=" << shapeNE.top << ";w=" << shapeNE.width << ";h=" << shapeNE.height << "]" << std::endl;
+                            std::cout << "ShapeSW = [x=" << shapeSW.left << ";y=" << shapeSW.top << ";w=" << shapeSW.width << ";h=" << shapeSW.height << "]" << std::endl;
+                            std::cout << "ShapeSE = [x=" << shapeSE.left << ";y=" << shapeSE.top << ";w=" << shapeSE.width << ";h=" << shapeSE.height << "]" << std::endl;
                         }
-                        sf::Sprite* spriteNW = new sf::Sprite;
-                        sf::Sprite* spriteNE = new sf::Sprite;
-                        sf::Sprite* spriteSW = new sf::Sprite;
-                        sf::Sprite* spriteSE = new sf::Sprite;
-                        spriteNW->setTexture(*obj->getTexture());
-                        spriteNE->setTexture(*obj->getTexture());
-                        spriteSW->setTexture(*obj->getTexture());
-                        spriteSE->setTexture(*obj->getTexture());
-
-                        // x = x
-                        // y = y
-                        // w = NW.w-x
-                        // h = NW.h-y
-                        spriteNW->setTextureRect(sf::IntRect(textRect.left,
-                                                             textRect.top,
-                                                             m_northWest->getShape().width - bound.left,
-                                                             m_northWest->getShape().height - bound.top));
-                        spriteNW->setPosition(sf::Vector2f(bound.left,bound.top));
-
-                        // x = NE.x
-                        // y = y
-                        // w = w - (NW.w-x)
-                        // h = NE.h - y
-                        spriteNE->setTextureRect(sf::IntRect(textRect.left + (m_northWest->getShape().width - bound.left),
-                                                             textRect.top,
-                                                             textRect.width - (m_northWest->getShape().width - bound.left),
-                                                             m_northEast->getShape().height - bound.top));
-                        spriteNE->setPosition(sf::Vector2f(m_northEast->getShape().left,bound.top));
-
-                        // x = x
-                        // y = SW.y
-                        // w = SW.w - x
-                        // h = h - (NW.h - y)
-                        spriteSW->setTextureRect(sf::IntRect(textRect.left,
-                                                             textRect.top + (m_northWest->getShape().height - bound.top),
-                                                             m_southWest->getShape().width - bound.left,
-                                                             textRect.height - (m_northWest->getShape().height - bound.top)));
-                        spriteSW->setPosition(sf::Vector2f(bound.left,m_southWest->getShape().top));
-
-                        // x = SE.x
-                        // y = SE.y
-                        // w = w - (NW.w - x)
-                        // h = h - (NW.h - y)
-                        spriteSE->setTextureRect(sf::IntRect(textRect.left + (m_northWest->getShape().width - bound.left),
-                                                             textRect.top + (m_northWest->getShape().height - bound.top),
-                                                             textRect.width - (m_northWest->getShape().width - bound.left),
-                                                             textRect.height - (m_northWest->getShape().height - bound.top)));
-                        spriteSE->setPosition(sf::Vector2f(m_southEast->getShape().left,m_southEast->getShape().top));
+                        /////////////
+                        //SPRITE NW//
+                        /////////////
+                        //////////////////////////////////////////////////////////////////////////////
+                        tSpriteNW.width = shapeNE.left - bound.left;
+                        tSpriteNW.height = shapeSW.top - bound.top;
+                        spriteNW->setTextureRect(tSpriteNW);
+                        spriteNW->setPosition(pSpriteNW);
+                        //////////////////////////////////////////////////////////////////////////////
+                        if(DEBUG)
+                        {
+                            std::cout << "spriteNW [tx=" << tSpriteNW.left << ";ty=" << tSpriteNW.top << ";w=" << tSpriteNW.width << ";h=" << tSpriteNW.height << "] [x=" << pSpriteNW.x << ";y=" << pSpriteNW.y << "]" << std::endl;
+                        }
+                        /////////////
+                        //SPRITE NE//
+                        /////////////
+                        //////////////////////////////////////////////////////////////////////////////
+                        tSpriteNE.left = tRect.left + tSpriteNW.width;
+                        tSpriteNE.width = bound.width - tSpriteNW.width;
+                        tSpriteNE.height = shapeSE.top - bound.top;
+                        pSpriteNE.x = shapeNE.left;
+                        spriteNE->setTextureRect(tSpriteNE);
+                        spriteNE->setPosition(pSpriteNE);
+                        //////////////////////////////////////////////////////////////////////////////
+                        if(DEBUG)
+                        {
+                            std::cout << "spriteNE [tx=" << tSpriteNE.left << ";ty=" << tSpriteNE.top << ";w=" << tSpriteNE.width << ";h=" << tSpriteNE.height << "] [x=" << pSpriteNE.x << ";y=" << pSpriteNE.y << "]" << std::endl;
+                        }
+                        /////////////
+                        //SPRITE SW//
+                        /////////////
+                        //////////////////////////////////////////////////////////////////////////////
+                        tSpriteSW.top = tRect.top + tSpriteNW.height;
+                        tSpriteSW.width = shapeSE.left - bound.left;
+                        tSpriteSW.height = bound.height - tSpriteNW.height;
+                        pSpriteSW.y = shapeSW.top;
+                        spriteSW->setTextureRect(tSpriteSW);
+                        spriteSW->setPosition(pSpriteSW);
+                        //////////////////////////////////////////////////////////////////////////////
+                        if(DEBUG)
+                        {
+                            std::cout << "spriteSW [tx=" << tSpriteSW.left << ";ty=" << tSpriteSW.top << ";w=" << tSpriteSW.width << ";h=" << tSpriteSW.height << "] [x=" << pSpriteSW.x << ";y=" << pSpriteSW.y << "]" << std::endl;
+                        }
+                        /////////////
+                        //SPRITE SE//
+                        /////////////
+                        //////////////////////////////////////////////////////////////////////////////
+                        tSpriteSE.left = tRect.left + tSpriteNW.width;
+                        tSpriteSE.top = tRect.top + tSpriteNW.height;
+                        tSpriteSE.width = bound.width - tSpriteNW.width;
+                        tSpriteSE.height = bound.height - tSpriteNW.height;
+                        pSpriteSE.x = shapeSE.left;
+                        pSpriteSE.y = shapeSE.top;
+                        spriteSE->setTextureRect(tSpriteSE);
+                        spriteSE->setPosition(pSpriteSE);
+                        //////////////////////////////////////////////////////////////////////////////
+                        if(DEBUG)
+                        {
+                            std::cout << "spriteSE [tx=" << tSpriteSE.left << ";ty=" << tSpriteSE.top << ";w=" << tSpriteSE.width << ";h=" << tSpriteSE.height << "] [x=" << pSpriteSE.x << ";y=" << pSpriteSE.y << "]" << std::endl;
+                        }
 
                         // On ajoute les 4 sprites au quadrant correspondant
                         m_northWest->add(spriteNW);
@@ -158,51 +242,78 @@ bool Quadtree::add(sf::Sprite* obj)
                         if(DEBUG)
                         {
                             std::cout << "Tile intersect NW - SW"<< std::endl;
+                            std::cout << "ShapeNW = [x=" << shapeNW.left << ";y=" << shapeNW.top << ";w=" << shapeNW.width << ";h=" << shapeNW.height << "]" << std::endl;
+                            std::cout << "ShapeSW = [x=" << shapeSW.left << ";y=" << shapeSW.top << ";w=" << shapeSW.width << ";h=" << shapeSW.height << "]" << std::endl;
                         }
-                        sf::Sprite* spriteNW = new sf::Sprite;
-                        sf::Sprite* spriteSW = new sf::Sprite;
-                        spriteNW->setTexture(*obj->getTexture());
-                        spriteSW->setTexture(*obj->getTexture());
-
-                        spriteNW->setTextureRect(sf::IntRect(textRect.left,
-                                                             textRect.top,
-                                                             textRect.width,
-                                                             m_northWest->getShape().height - bound.top));
-                        spriteNW->setPosition(sf::Vector2f(bound.left,bound.top));
-
-                        spriteSW->setTextureRect(sf::IntRect(textRect.left,
-                                                             textRect.top + (m_northWest->getShape().height - bound.top),
-                                                             textRect.width,
-                                                             textRect.height - (m_northWest->getShape().height - bound.top)));
-                        spriteSW->setPosition(sf::Vector2f(bound.left,m_southWest->getShape().top));
-
+                        /////////////
+                        //SPRITE NW//
+                        /////////////
+                        //////////////////////////////////////////////////////////////////////////////
+                        tSpriteNW.width = bound.width;
+                        tSpriteNW.height = shapeSW.top - bound.top;
+                        spriteNW->setTextureRect(tSpriteNW);
+                        spriteNW->setPosition(pSpriteNW);
+                        //////////////////////////////////////////////////////////////////////////////
+                        if(DEBUG)
+                        {
+                            std::cout << "spriteNW [tx=" << tSpriteNW.left << ";ty=" << tSpriteNW.top << ";w=" << tSpriteNW.width << ";h=" << tSpriteNW.height << "] [x=" << pSpriteNW.x << ";y=" << pSpriteNW.y << "]" << std::endl;
+                        }
+                        /////////////
+                        //SPRITE SW//
+                        /////////////
+                        //////////////////////////////////////////////////////////////////////////////
+                        tSpriteSW.top = tRect.top + tSpriteNW.height;
+                        tSpriteSW.width = bound.width;
+                        tSpriteSW.height = bound.height - tSpriteNW.height;
+                        pSpriteSW.y = shapeSW.top;
+                        spriteSW->setTextureRect(tSpriteSW);
+                        spriteSW->setPosition(pSpriteSW);
+                        //////////////////////////////////////////////////////////////////////////////
+                        if(DEBUG)
+                        {
+                            std::cout << "spriteSW [tx=" << tSpriteSW.left << ";ty=" << tSpriteSW.top << ";w=" << tSpriteSW.width << ";h=" << tSpriteSW.height << "] [x=" << pSpriteSW.x << ";y=" << pSpriteSW.y << "]" << std::endl;
+                        }
                         m_northWest->add(spriteNW);
                         m_southWest->add(spriteSW);
                     } // On verifie si le tile est entre les quadrants NW et NE
-                } else if (m_northEast->getShape().intersects(obj->getGlobalBounds()))
+                } else if (shapeNE.intersects(bound) && m_northEast->isEnable())
                 {
                     /** Il faut couper le tile en 2 et l'ajouter dans les quadrants NW et NE**/
                     if(DEBUG)
-                        {
-                            std::cout << "Tile intersect NW - NE"<< std::endl;
-                        }
-                    sf::Sprite* spriteNW = new sf::Sprite;
-                    sf::Sprite* spriteNE = new sf::Sprite;
-                    spriteNW->setTexture(*obj->getTexture());
-                    spriteNE->setTexture(*obj->getTexture());
+                    {
+                        std::cout << "Tile intersect NW - NE"<< std::endl;
+                        std::cout << "ShapeNW = [x=" << shapeNW.left << ";y=" << shapeNW.top << ";w=" << shapeNW.width << ";h=" << shapeNW.height << "]" << std::endl;
+                        std::cout << "ShapeNE = [x=" << shapeNE.left << ";y=" << shapeNE.top << ";w=" << shapeNE.width << ";h=" << shapeNE.height << "]" << std::endl;
+                    }
+                    /////////////
+                    //SPRITE NW//
+                    /////////////
+                    //////////////////////////////////////////////////////////////////////////////
+                    tSpriteNW.width = shapeNE.left - bound.left;
+                    tSpriteNW.height = bound.height;
+                    spriteNW->setTextureRect(tSpriteNW);
+                    spriteNW->setPosition(pSpriteNW);
+                    //////////////////////////////////////////////////////////////////////////////
+                    if(DEBUG)
+                    {
+                        std::cout << "spriteNW [tx=" << tSpriteNW.left << ";ty=" << tSpriteNW.top << ";w=" << tSpriteNW.width << ";h=" << tSpriteNW.height << "] [x=" << pSpriteNW.x << ";y=" << pSpriteNW.y << "]" << std::endl;
+                    }
+                    /////////////
+                    //SPRITE NE//
+                    /////////////
+                    //////////////////////////////////////////////////////////////////////////////
+                    tSpriteNE.left = tRect.left + tSpriteNW.width;
+                    tSpriteNE.width = bound.width - tSpriteNW.width;
+                    tSpriteNE.height = bound.height;
+                    pSpriteNE.x = shapeNE.left;
+                    spriteNE->setTextureRect(tSpriteNE);
+                    spriteNE->setPosition(pSpriteNE);
+                    //////////////////////////////////////////////////////////////////////////////
+                    if(DEBUG)
+                    {
+                        std::cout << "spriteNE [tx=" << tSpriteNE.left << ";ty=" << tSpriteNE.top << ";w=" << tSpriteNE.width << ";h=" << tSpriteNE.height << "] [x=" << pSpriteNE.x << ";y=" << pSpriteNE.y << "]" << std::endl;
+                    }
 
-                    spriteNW->setTextureRect(sf::IntRect(textRect.left,
-                                                         textRect.top,
-                                                         m_northWest->getShape().width - bound.left,
-                                                         textRect.height));
-                    spriteNW->setPosition(sf::Vector2f(sf::Vector2f(bound.left,bound.top)));
-
-
-                    spriteNE->setTextureRect(sf::IntRect(textRect.left + (m_northWest->getShape().width - bound.left),
-                                                         textRect.top,
-                                                         textRect.width - (m_northWest->getShape().width - bound.left),
-                                                         textRect.height));
-                    spriteNE->setPosition(sf::Vector2f(m_northEast->getShape().left,bound.top));
 
                     m_northWest->add(spriteNW);
                     m_northEast->add(spriteNE);
@@ -210,33 +321,50 @@ bool Quadtree::add(sf::Sprite* obj)
                 { // Il est uniquement dans le quadrant NW
                     m_northWest->add(obj);
                 }
-            } else if (m_northEast->getShape().intersects(obj->getGlobalBounds()))
+            } else if (shapeNE.intersects(bound))
             {
                 // On verifie si le tile est entre les quadrants NE et SE
-                if(m_southEast->getShape().intersects(obj->getGlobalBounds()))
+                if(shapeSE.intersects(bound) && m_southEast->isEnable())
                 {
                     /** Il faut couper le tile en 2 et le rajouter dans les quadrants NE et SE**/
                     if(DEBUG)
                     {
                         std::cout << "Tile intersect NE - SE"<< std::endl;
+                        std::cout << "ShapeNE = [x=" << shapeNE.left << ";y=" << shapeNE.top << ";w=" << shapeNE.width << ";h=" << shapeNE.height << "]" << std::endl;
+                        std::cout << "ShapeSE = [x=" << shapeSE.left << ";y=" << shapeSE.top << ";w=" << shapeSE.width << ";h=" << shapeSE.height << "]" << std::endl;
                     }
-                    sf::Sprite* spriteNE = new sf::Sprite;
-                    sf::Sprite* spriteSE = new sf::Sprite;
-                    spriteNE->setTexture(*obj->getTexture());
-                    spriteSE->setTexture(*obj->getTexture());
-
-                    spriteNE->setTextureRect(sf::IntRect(textRect.left,
-                                                         textRect.top,
-                                                         textRect.width,
-                                                         m_northEast->getShape().height - bound.top));
-                    spriteNE->setPosition(sf::Vector2f(bound.left,bound.top));
-
-
-                    spriteSE->setTextureRect(sf::IntRect(textRect.left,
-                                                         textRect.top + (m_northWest->getShape().height - bound.top),
-                                                         textRect.width,
-                                                         textRect.height - (m_northWest->getShape().height - bound.top)));
-                    spriteSE->setPosition(sf::Vector2f(bound.left,m_southEast->getShape().top));
+                    /////////////
+                    //SPRITE NE//
+                    /////////////
+                    //////////////////////////////////////////////////////////////////////////////
+                    tSpriteNE.left = tRect.left;
+                    tSpriteNE.width = bound.width;
+                    tSpriteNE.height = shapeSE.top - bound.top;
+                    pSpriteNE.x = bound.left;
+                    spriteNE->setTextureRect(tSpriteNE);
+                    spriteNE->setPosition(pSpriteNE);
+                    //////////////////////////////////////////////////////////////////////////////
+                    if(DEBUG)
+                    {
+                        std::cout << "spriteNE [tx=" << tSpriteNE.left << ";ty=" << tSpriteNE.top << ";w=" << tSpriteNE.width << ";h=" << tSpriteNE.height << "] [x=" << pSpriteNE.x << ";y=" << pSpriteNE.y << "]" << std::endl;
+                    }
+                    /////////////
+                    //SPRITE SE//
+                    /////////////
+                    //////////////////////////////////////////////////////////////////////////////
+                    tSpriteSE.left = tRect.left;
+                    tSpriteSE.top = tRect.top + tSpriteNE.height;
+                    tSpriteSE.width = bound.width;
+                    tSpriteSE.height = bound.height - tSpriteNE.height;
+                    pSpriteSE.x = bound.left;
+                    pSpriteSE.y = shapeSE.top;
+                    spriteSE->setTextureRect(tSpriteSE);
+                    spriteSE->setPosition(pSpriteSE);
+                    //////////////////////////////////////////////////////////////////////////////
+                    if(DEBUG)
+                    {
+                        std::cout << "spriteSE [tx=" << tSpriteSE.left << ";ty=" << tSpriteSE.top << ";w=" << tSpriteSE.width << ";h=" << tSpriteSE.height << "] [x=" << pSpriteSE.x << ";y=" << pSpriteSE.y << "]" << std::endl;
+                    }
 
                     m_northEast->add(spriteNE);
                     m_southEast->add(spriteSE);
@@ -245,47 +373,66 @@ bool Quadtree::add(sf::Sprite* obj)
                 {
                     m_northEast->add(obj);
                 }
-            } else if (m_southWest->getShape().intersects(obj->getGlobalBounds()))
+            } else if (shapeSW.intersects(bound))
             {
                 // On verifie si le tile est entre les quadrants SW et SE
-                if(m_southEast->getShape().intersects(obj->getGlobalBounds()))
+                if(shapeSE.intersects(bound))
                 {
                     /** Il faut couper le tile en 2 et le rajouter dans les quadrants SW et SE**/
                     if(DEBUG)
                     {
                         std::cout << "Tile intersect SW - SE"<< std::endl;
+                        std::cout << "ShapeSE = [x=" << shapeSE.left << ";y=" << shapeSE.top << ";w=" << shapeSE.width << ";h=" << shapeSE.height << "]" << std::endl;
+                        std::cout << "ShapeSW = [x=" << shapeSW.left << ";y=" << shapeSW.top << ";w=" << shapeSW.width << ";h=" << shapeSW.height << "]" << std::endl;
                     }
-                    sf::Sprite* spriteSW = new sf::Sprite;
-                    sf::Sprite* spriteSE = new sf::Sprite;
-                    spriteSW->setTexture(*obj->getTexture());
-                    spriteSE->setTexture(*obj->getTexture());
+                    /////////////
+                    //SPRITE SW//
+                    /////////////
+                    //////////////////////////////////////////////////////////////////////////////
+                    tSpriteSW.top = tRect.top;
+                    tSpriteSW.width = shapeSE.left - bound.left;
+                    tSpriteSW.height = bound.height;
+                    pSpriteSW.y = bound.top;
+                    spriteSW->setTextureRect(tSpriteSW);
+                    spriteSW->setPosition(pSpriteSW);
+                    //////////////////////////////////////////////////////////////////////////////
+                    if(DEBUG)
+                    {
+                        std::cout << "spriteSW [tx=" << tSpriteSW.left << ";ty=" << tSpriteSW.top << ";w=" << tSpriteSW.width << ";h=" << tSpriteSW.height << "] [x=" << pSpriteSW.x << ";y=" << pSpriteSW.y << "]" << std::endl;
+                    }
 
-                    spriteSW->setTextureRect(sf::IntRect(textRect.left,
-                                                         textRect.top,
-                                                         m_southWest->getShape().width - bound.left,
-                                                         textRect.height));
-                    spriteSW->setPosition(sf::Vector2f(bound.left,bound.top));
-
-
-                    spriteSE->setTextureRect(sf::IntRect(textRect.left + (m_northWest->getShape().width - bound.left),
-                                                         textRect.top,
-                                                         textRect.width - (m_northWest->getShape().width - bound.left),
-                                                         textRect.height));
-                    spriteSE->setPosition(sf::Vector2f(m_southEast->getShape().left,bound.top));
-
+                    /////////////
+                    //SPRITE SE//
+                    /////////////
+                    //////////////////////////////////////////////////////////////////////////////
+                    /** TODO **/
+                    tSpriteSE.left = tRect.left + tSpriteSW.width;
+                    tSpriteSE.top = tRect.top;
+                    tSpriteSE.width = bound.width - tSpriteSW.width;
+                    tSpriteSE.height = bound.height;
+                    pSpriteSE.x = shapeSE.left;
+                    pSpriteSE.y = bound.top;
+                    spriteSE->setTextureRect(tSpriteSE);
+                    spriteSE->setPosition(pSpriteSE);
+                    //////////////////////////////////////////////////////////////////////////////
+                    if(DEBUG)
+                    {
+                        std::cout << "spriteSE [tx=" << tSpriteSE.left << ";ty=" << tSpriteSE.top << ";w=" << tSpriteSE.width << ";h=" << tSpriteSE.height << "] [x=" << pSpriteSE.x << ";y=" << pSpriteSE.y << "]" << std::endl;
+                    }
                     m_southWest->add(spriteSW);
                     m_southEast->add(spriteSE);
                 } else // Il est uniquement dans le quadrant SW
                 {
                     m_southWest->add(obj);
                 }
-            } else if (m_southEast->getShape().intersects(obj->getGlobalBounds()))
+            } else if (shapeSE.intersects(bound))
             {
                 m_southEast->add(obj);
             }
-
+            std::cout << "*--END--*" << std::endl;
             return true;
         }
+        std::cout << "*--END--*" << std::endl;
         return false;
     }
 }
@@ -462,19 +609,6 @@ void Quadtree::subdivide()
         }
         for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
         {
-            /*if(m_northWest->getShape().intersects((*it)->getGlobalBounds()))
-            {
-                m_northWest->add(*it);
-            } else if (m_northEast->getShape().intersects((*it)->getGlobalBounds()))
-            {
-                m_northEast->add(*it);
-            } else if (m_southWest->getShape().intersects((*it)->getGlobalBounds()))
-            {
-                m_southWest->add(*it);
-            } else if (m_southEast->getShape().intersects((*it)->getGlobalBounds()))
-            {
-                m_southEast->add(*it);
-            }*/
             add(*it);
         }
         m_elements->clear();
