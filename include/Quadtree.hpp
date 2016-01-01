@@ -8,20 +8,19 @@
 #include <iostream>
 #include "Structure.hpp"
 #include "Constante.hpp"
-//#include "Engine.hpp"
 
-#define DEBUG 1
+#define DEBUG 0
+#define DEBUGLOCAL 0
 class Quadtree
 {
 
     public:
         Quadtree(float x, float y, float width, float height);
         ~Quadtree();
-        //Quadtree(std::vector<sf::Sprite*> obj);
-        //virtual ~Quadtree();
+        Quadtree(float x, float y, float width, float height, std::vector<sf::Sprite*> obj);
         bool add(sf::Sprite* obj);
-        sf::Sprite* del(sf::FloatRect pos);
-        std::vector<sf::Sprite*>*  queryRange(sf::FloatRect pos);
+        std::vector<sf::Sprite*>* del(sf::FloatRect pos);
+        std::vector<sf::Sprite*>* queryRange(sf::FloatRect pos);
         inline sf::FloatRect getShape() {return m_shape;}
 
         void clear();
@@ -37,11 +36,13 @@ class Quadtree
     private:
         void subdivide();
         void merge();
+        std::vector<sf::Sprite*>* eraseSplitedElement(sf::FloatRect pos);
         Quadtree* m_northWest;
         Quadtree* m_northEast;
         Quadtree* m_southWest;
         Quadtree* m_southEast;
         std::vector<sf::Sprite*>* m_elements;
+        std::vector<SplitedSprite*>* m_splitedElements;
         sf::RectangleShape m_boundary;
         sf::FloatRect m_shape;
         bool m_enable;

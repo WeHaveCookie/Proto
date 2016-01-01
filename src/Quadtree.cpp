@@ -9,6 +9,7 @@ Quadtree::Quadtree(float x, float y, float width, float height)
     m_boundary.setOutlineColor(sf::Color::Green);
     m_shape = sf::FloatRect(x,y,width,height);
     m_elements = new std::vector<sf::Sprite*>;
+    m_splitedElements = new std::vector<SplitedSprite*>;
     m_elements->reserve(sizeof(std::vector<sf::Sprite*>)*QUAD_NODE_CAPACITY);
     m_northWest = NULL;
     m_northEast = NULL;
@@ -27,6 +28,7 @@ Quadtree::~Quadtree()
         delete m_southEast;
     }
     delete m_elements;
+    delete m_splitedElements;
 }
 
 
@@ -39,10 +41,14 @@ Quadtree::~Quadtree()
 * \param obj : List of Object
 * \return none. Built the Quadtree which matching to segment
 **/
-/*Quadtree::Quadtree(std::list<sf::Sprite*> obj)
+Quadtree::Quadtree(float x, float y, float width, float height, std::vector<sf::Sprite*> obj)
 {
-
-}*/
+    Quadtree(x,y,width,height);
+    for(std::vector<sf::Sprite*>::iterator it = obj.begin(); it != obj.end(); it++)
+    {
+        add(*it);
+    }
+}
 
 /**
 *
@@ -92,6 +98,12 @@ bool Quadtree::add(sf::Sprite* obj)
                 std::cout << "*--------*" << std::endl;
                 std::cout << "tRect [x=" << tRect.left << ";y=" << tRect.top << ";w=" << tRect.width << ";h=" << tRect.height <<  "]" <<std::endl;
             }
+            SplitedSprite* spl = new SplitedSprite;
+            spl->origin = obj;
+            spl->NW = NULL;
+            spl->NE = NULL;
+            spl->SW = NULL;
+            spl->SE = NULL;
             sf::IntRect tSpriteNW;
             sf::IntRect tSpriteNE;
             sf::IntRect tSpriteSW;
@@ -156,10 +168,10 @@ bool Quadtree::add(sf::Sprite* obj)
             if(shapeNW.intersects(bound))
             {
                 // On verifie si le tile est entre les quadrants NW et SW
-                if(shapeSW.intersects(bound) && m_southWest->isEnable())
+                if(shapeSW.intersects(bound))
                 {
                     // On verifie si le tile est entre tout les quadrants
-                    if(shapeSE.intersects(bound) && shapeNE.intersects(bound) && m_southEast->isEnable() && m_northEast->isEnable())
+                    if(shapeSE.intersects(bound) && shapeNE.intersects(bound))
                     {
                         /** Il faut couper le tile en 4 et l'ajouter dans les 4 quadrants **/
                         if(DEBUG)
@@ -231,6 +243,16 @@ bool Quadtree::add(sf::Sprite* obj)
                             std::cout << "spriteSE [tx=" << tSpriteSE.left << ";ty=" << tSpriteSE.top << ";w=" << tSpriteSE.width << ";h=" << tSpriteSE.height << "] [x=" << pSpriteSE.x << ";y=" << pSpriteSE.y << "]" << std::endl;
                         }
 
+                        // On ajoute les 4 sprites splitté au quadrant père
+                        if(DEBUGLOCAL)
+                        {
+                            std::cout << "Ajout dans tout les quadrant" << std::endl;
+                        }
+                        spl->NW = spriteNW;
+                        spl->NE = spriteNE;
+                        spl->SW = spriteSW;
+                        spl->SE = spriteSE;
+                        m_splitedElements->push_back(spl);
                         // On ajoute les 4 sprites au quadrant correspondant
                         m_northWest->add(spriteNW);
                         m_northEast->add(spriteNE);
@@ -273,10 +295,18 @@ bool Quadtree::add(sf::Sprite* obj)
                         {
                             std::cout << "spriteSW [tx=" << tSpriteSW.left << ";ty=" << tSpriteSW.top << ";w=" << tSpriteSW.width << ";h=" << tSpriteSW.height << "] [x=" << pSpriteSW.x << ";y=" << pSpriteSW.y << "]" << std::endl;
                         }
+                        // On ajoute les 2 sprites splitté au quadrant père
+                        if(DEBUG)
+                        {
+                            std::cout << "Ajout dans NW - SW" << std::endl;
+                        }
+                        spl->NW = spriteNW;
+                        spl->SW = spriteSW;
+                        m_splitedElements->push_back(spl);
                         m_northWest->add(spriteNW);
                         m_southWest->add(spriteSW);
                     } // On verifie si le tile est entre les quadrants NW et NE
-                } else if (shapeNE.intersects(bound) && m_northEast->isEnable())
+                } else if (shapeNE.intersects(bound))
                 {
                     /** Il faut couper le tile en 2 et l'ajouter dans les quadrants NW et NE**/
                     if(DEBUG)
@@ -314,17 +344,28 @@ bool Quadtree::add(sf::Sprite* obj)
                         std::cout << "spriteNE [tx=" << tSpriteNE.left << ";ty=" << tSpriteNE.top << ";w=" << tSpriteNE.width << ";h=" << tSpriteNE.height << "] [x=" << pSpriteNE.x << ";y=" << pSpriteNE.y << "]" << std::endl;
                     }
 
-
+                    // On ajoute les 2 sprites splitté au quadrant père
+                    if(DEBUG)
+                    {
+                        std::cout << "Ajout dans NW - NE" << std::endl;
+                    }
+                    spl->NW = spriteNW;
+                    spl->NE = spriteNE;
+                    m_splitedElements->push_back(spl);
                     m_northWest->add(spriteNW);
                     m_northEast->add(spriteNE);
                 } else
                 { // Il est uniquement dans le quadrant NW
+                    if(DEBUG)
+                    {
+                        std::cout << "Ajout dans NW" << std::endl;
+                    }
                     m_northWest->add(obj);
                 }
             } else if (shapeNE.intersects(bound))
             {
                 // On verifie si le tile est entre les quadrants NE et SE
-                if(shapeSE.intersects(bound) && m_southEast->isEnable())
+                if(shapeSE.intersects(bound))
                 {
                     /** Il faut couper le tile en 2 et le rajouter dans les quadrants NE et SE**/
                     if(DEBUG)
@@ -365,12 +406,23 @@ bool Quadtree::add(sf::Sprite* obj)
                     {
                         std::cout << "spriteSE [tx=" << tSpriteSE.left << ";ty=" << tSpriteSE.top << ";w=" << tSpriteSE.width << ";h=" << tSpriteSE.height << "] [x=" << pSpriteSE.x << ";y=" << pSpriteSE.y << "]" << std::endl;
                     }
-
+                    // On ajoute les 2 sprites splitté au quadrant père
+                    if(DEBUGLOCAL)
+                    {
+                        std::cout << "Ajout dans NE - SE" << std::endl;
+                    }
+                    spl->NE = spriteNE;
+                    spl->SE = spriteSE;
+                    m_splitedElements->push_back(spl);
                     m_northEast->add(spriteNE);
                     m_southEast->add(spriteSE);
 
                 } else // Il est uniquement dans le quadrant NE
                 {
+                    if(DEBUG)
+                    {
+                        std::cout << "Ajout dans NE" << std::endl;
+                    }
                     m_northEast->add(obj);
                 }
             } else if (shapeSW.intersects(bound))
@@ -405,7 +457,6 @@ bool Quadtree::add(sf::Sprite* obj)
                     //SPRITE SE//
                     /////////////
                     //////////////////////////////////////////////////////////////////////////////
-                    /** TODO **/
                     tSpriteSE.left = tRect.left + tSpriteSW.width;
                     tSpriteSE.top = tRect.top;
                     tSpriteSE.width = bound.width - tSpriteSW.width;
@@ -419,20 +470,42 @@ bool Quadtree::add(sf::Sprite* obj)
                     {
                         std::cout << "spriteSE [tx=" << tSpriteSE.left << ";ty=" << tSpriteSE.top << ";w=" << tSpriteSE.width << ";h=" << tSpriteSE.height << "] [x=" << pSpriteSE.x << ";y=" << pSpriteSE.y << "]" << std::endl;
                     }
+                    // On ajoute les 2 sprites splitté au quadrant père
+                    if(DEBUGLOCAL)
+                    {
+                        std::cout << "Ajout dans SW - SE" << std::endl;
+                    }
+                    spl->SW = spriteSW;
+                    spl->SE = spriteSE;
+                    m_splitedElements->push_back(spl);
                     m_southWest->add(spriteSW);
                     m_southEast->add(spriteSE);
                 } else // Il est uniquement dans le quadrant SW
                 {
+                    if(DEBUG)
+                    {
+                        std::cout << "Ajout dans SW" << std::endl;
+                    }
                     m_southWest->add(obj);
                 }
             } else if (shapeSE.intersects(bound))
             {
+                if(DEBUG)
+                {
+                    std::cout << "Ajout dans SE" << std::endl;
+                }
                 m_southEast->add(obj);
             }
-            std::cout << "*--END--*" << std::endl;
+            if(DEBUG)
+            {
+                std::cout << "*--END--*" << std::endl;
+            }
             return true;
         }
-        std::cout << "*--END--*" << std::endl;
+        if(DEBUG)
+        {
+            std::cout << "*--END--*" << std::endl;
+        }
         return false;
     }
 }
@@ -446,28 +519,51 @@ bool Quadtree::add(sf::Sprite* obj)
 * \param pos : The position of the object to be deleted
 * \return the deleted object
 **/
-sf::Sprite* Quadtree::del(sf::FloatRect pos)
+std::vector<sf::Sprite*>* Quadtree::del(sf::FloatRect pos)
 {
-    //sf::FloatRect posRect = sf::FloatRect(pos.x,pos.y,SPRITE_WIDTH,SPRITE_HEIGHT);
-    sf::Sprite* delObject = NULL;
+    if(DEBUG)
+    {
+        std::cout << "*-----*" << std::endl;
+        std::cout << "*-DEL-*" << std::endl;
+        std::cout << "*-----*" << std::endl << std::endl;
+        std::cout << "pos [x=" << pos.left << ";y=" << pos.top << ";w=" << pos.width << ":h=" << pos.height << "]" << std::endl;
+    }
+    std::vector<sf::Sprite*>* delObjects = new std::vector<sf::Sprite*>;
+    std::vector<sf::Sprite*>* answer = new std::vector<sf::Sprite*>;
     if(!m_shape.intersects(pos)) {
-        return delObject;
+        return delObjects;
     }
 
     if(m_elements->empty() && !m_enable)
     {
-        if(m_northWest->getShape().intersects(pos))
+        if(m_splitedElements->size() != 0)
         {
-            delObject = m_northWest->del(pos);
-        } else if (m_northEast->getShape().intersects(pos))
+            answer = eraseSplitedElement(pos);
+            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
+        }
+        sf::FloatRect shapeNW = m_northWest->getShape();
+        sf::FloatRect shapeNE = m_northEast->getShape();
+        sf::FloatRect shapeSW = m_southWest->getShape();
+        sf::FloatRect shapeSE = m_southEast->getShape();
+        if(shapeNW.intersects(pos))
         {
-            delObject = m_northEast->del(pos);
-        } else if (m_southWest->getShape().intersects(pos))
+            answer = m_northWest->del(pos);
+            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
+        }
+        if(shapeNE.intersects(pos))
         {
-            delObject = m_southWest->del(pos);
-        } else if (m_southEast->getShape().intersects(pos))
+            answer = m_northEast->del(pos);
+            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
+        }
+        if(shapeSW.intersects(pos))
         {
-            delObject = m_southEast->del(pos);
+            answer = m_southWest->del(pos);
+            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
+        }
+        if(shapeSE.intersects(pos))
+        {
+            answer = m_southEast->del(pos);
+            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
         }
         if(DEBUG)
         {
@@ -477,20 +573,28 @@ sf::Sprite* Quadtree::del(sf::FloatRect pos)
         {
            merge();
         }
-        return delObject;
     } else
     {
-        for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
+        std::vector<sf::Sprite*>::iterator it = m_elements->begin();
+        for( ; it != m_elements->end(); )
         {
             if((*it)->getGlobalBounds().intersects(pos))
             {
-                delObject = *it;
-                m_elements->erase(it);
-                return delObject;
+                delObjects->push_back(*it);
+                it = m_elements->erase(it);
+            } else
+            {
+                ++it;
             }
         }
     }
-    return delObject;
+    if(DEBUG)
+    {
+        std::cout << "*-----*" << std::endl;
+        std::cout << "*-END-*" << std::endl;
+        std::cout << "*-----*" << std::endl << std::endl;
+    }
+    return delObjects;
 }
 
 /**
@@ -503,7 +607,7 @@ sf::Sprite* Quadtree::del(sf::FloatRect pos)
 * \return vector of element around obj. Return NULL if obj is not in quadrant
 **/
 std::vector<sf::Sprite*>* Quadtree::queryRange(sf::FloatRect pos)
-{ // WARNING : La collision lorsque le char n'intersect pas le quadrant n'est pas géré
+{
     if(DEBUG)
     {
         std::cout << "*--------------*" << std::endl;
@@ -543,37 +647,22 @@ std::vector<sf::Sprite*>* Quadtree::queryRange(sf::FloatRect pos)
         if(m_northWest->getShape().intersects(pos))
         {
             tmp = m_northWest->queryRange(pos);
-            if(tmp != NULL)
-            {
-                answer->insert(answer->end(),tmp->begin(),tmp->end());
-            }
-
+            answer->insert(answer->end(),tmp->begin(),tmp->end());
         }
         if (m_northEast->getShape().intersects(pos))
         {
             tmp = m_northEast->queryRange(sf::FloatRect(pos));
-            if(tmp != NULL)
-            {
-                answer->insert(answer->end(),tmp->begin(),tmp->end());
-            }
-
+            answer->insert(answer->end(),tmp->begin(),tmp->end());
         }
         if (m_southWest->getShape().intersects(pos))
         {
             tmp = m_southWest->queryRange(sf::FloatRect(pos));
-            if(tmp != NULL)
-            {
-                answer->insert(answer->end(),tmp->begin(),tmp->end());
-            }
-
+            answer->insert(answer->end(),tmp->begin(),tmp->end());
         }
         if (m_southEast->getShape().intersects(pos))
         {
             tmp = m_southEast->queryRange(sf::FloatRect(pos));
-            if(tmp != NULL)
-            {
-                answer->insert(answer->end(),tmp->begin(),tmp->end());
-            }
+            answer->insert(answer->end(),tmp->begin(),tmp->end());
         }
         return answer;
     }
@@ -638,9 +727,17 @@ void Quadtree::merge()
         std::cout << "*---------*" << std::endl;
         std::cout << "*  MERGE  *" << std::endl;
         std::cout << "*---------*" << std::endl;
+        std::cout << "splited size : " << m_splitedElements->size() << std::endl;
     }
     m_elements = new std::vector<sf::Sprite*>;
-    m_elements->reserve(m_northWest->getElements()->size()+m_northEast->getElements()->size()+m_southWest->getElements()->size()+m_southEast->getElements()->size());
+    std::vector<SplitedSprite*>::iterator it = m_splitedElements->begin();
+    int splitedSize = m_splitedElements->size();
+    for(int i = 0; i < splitedSize; i++)
+    {
+        m_elements->push_back(m_splitedElements->at(0)->origin);
+        eraseSplitedElement(m_splitedElements->at(0)->origin->getGlobalBounds());
+    }
+
     m_elements->insert(m_elements->end(),m_northWest->getElements()->begin(),m_northWest->getElements()->end());
     m_elements->insert(m_elements->end(),m_northEast->getElements()->begin(),m_northEast->getElements()->end());
     m_elements->insert(m_elements->end(),m_southWest->getElements()->begin(),m_southWest->getElements()->end());
@@ -653,6 +750,73 @@ void Quadtree::merge()
         std::cout << "*----------------*" << std::endl;
     }
 }
+
+/**
+*
+* \fn eraseSplitedElement(sf::FloatRect pos)
+*
+* \brief Remove Deprecated Object (When tile is split into different quadrant
+*
+* \param
+* \return void
+**/
+
+std::vector<sf::Sprite*>* Quadtree::eraseSplitedElement(sf::FloatRect pos)
+{
+    std::vector<sf::Sprite*>* delObjects = new std::vector<sf::Sprite*>;
+    std::vector<SplitedSprite*>::iterator it = m_splitedElements->begin();
+    for( ; it != m_splitedElements->end(); )
+    {
+        if((*it)->origin->getGlobalBounds().intersects(pos))
+        {
+            delObjects->push_back((*it)->origin);
+            if(DEBUGLOCAL)
+            {
+                sf::FloatRect rect = (*it)->origin->getGlobalBounds();
+                std::cout << "Le sprite [x=" << rect.left << ";y=" << rect.top << ";w=" << rect.width << ";h=" << rect.height << "] est a supprimer" << std::endl;
+            }
+            if((*it)->NW != NULL)
+            {
+                if(DEBUGLOCAL)
+                {
+                    std::cout << "Suppression en NW" << std::endl;
+                }
+                m_northWest->del((*it)->NW->getGlobalBounds());
+            }
+            if((*it)->NE != NULL)
+            {
+                if(DEBUGLOCAL)
+                {
+                    std::cout << "Suppression en NE" << std::endl;
+                }
+                m_northEast->del((*it)->NE->getGlobalBounds());
+            }
+            if((*it)->SW != NULL)
+            {
+                if(DEBUGLOCAL)
+                {
+                    std::cout << "Suppression en SW" << std::endl;
+                }
+                m_southWest->del((*it)->SW->getGlobalBounds());
+            }
+            if((*it)->SE != NULL)
+            {
+                if(DEBUGLOCAL)
+                {
+                    std::cout << "Suppression en SE" << std::endl;
+                }
+                m_southEast->del((*it)->SE->getGlobalBounds());
+            }
+            it = m_splitedElements->erase(it);
+
+        } else
+        {
+            ++it;
+        }
+    }
+    return delObjects;
+}
+
 
 /**
 *
