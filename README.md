@@ -5,13 +5,9 @@ Pré-requis (pour la compilation):
 - c++11 
 
 Le sprite "Player" peut être déplacer avec les bouton :
-
 *'q' : Déplacement vers la gauche 
-
 *'s' : Déplacement vers le bas 
-
 *'d' : Déplacement vers la droite 
-
 *'space' : Déplacement vers le haut 
 
 
