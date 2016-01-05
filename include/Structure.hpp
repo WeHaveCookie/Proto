@@ -1,6 +1,7 @@
 #ifndef STRUCTURE_H
 #define STRUCTURE_H
 #include <list>
+#include <memory>
 #include <SFML/Graphics.hpp>
 
 /*
@@ -13,11 +14,11 @@ struct QuadTree
 
 struct SplitedSprite
 {
-    sf::Sprite* origin;
-    sf::Sprite* NW;
-    sf::Sprite* NE;
-    sf::Sprite* SW;
-    sf::Sprite* SE;
+    std::shared_ptr<sf::Sprite> origin;
+    std::shared_ptr<sf::Sprite> NW;
+    std::shared_ptr<sf::Sprite> NE;
+    std::shared_ptr<sf::Sprite> SW;
+    std::shared_ptr<sf::Sprite> SE;
 };
 
 #endif // STRUCTURE_H

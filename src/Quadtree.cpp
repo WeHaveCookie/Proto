@@ -8,27 +8,32 @@ Quadtree::Quadtree(float x, float y, float width, float height)
     m_boundary.setOutlineThickness(1.0f);
     m_boundary.setOutlineColor(sf::Color::Green);
     m_shape = sf::FloatRect(x,y,width,height);
-    m_elements = new std::vector<sf::Sprite*>;
-    m_splitedElements = new std::vector<SplitedSprite*>;
-    m_elements->reserve(sizeof(std::vector<sf::Sprite*>)*QUAD_NODE_CAPACITY);
     m_northWest = NULL;
     m_northEast = NULL;
     m_southWest = NULL;
     m_southEast = NULL;
     m_enable = true;
     m_displayTile = true;
+    if(DEBUG)
+    {
+        std::cout << "Storage capacity : " << m_elements.capacity() << std::endl;
+    }
 }
 
 Quadtree::~Quadtree()
 {
+    if(DEBUG)
+    {
+        std::cout << "~Quadtree" << std::endl;
+    }
     if(!m_enable) {
         delete m_northWest;
         delete m_northEast;
         delete m_southWest;
         delete m_southEast;
     }
-    delete m_elements;
-    delete m_splitedElements;
+    m_elements.clear();
+    m_splitedElements.clear();
 }
 
 
@@ -41,12 +46,12 @@ Quadtree::~Quadtree()
 * \param obj : List of Object
 * \return none. Built the Quadtree which matching to segment
 **/
-Quadtree::Quadtree(float x, float y, float width, float height, std::vector<sf::Sprite*> obj)
+Quadtree::Quadtree(float x, float y, float width, float height,  std::vector<std::shared_ptr<sf::Sprite>> obj)
 {
     Quadtree(x,y,width,height);
-    for(std::vector<sf::Sprite*>::iterator it = obj.begin(); it != obj.end(); it++)
+    for(std::vector<std::shared_ptr<sf::Sprite>>::iterator it = obj.begin(); it != obj.end(); it++)
     {
-        add(*it);
+        add(*(it)->get());
     }
 }
 
@@ -59,9 +64,9 @@ Quadtree::Quadtree(float x, float y, float width, float height, std::vector<sf::
 * \param obj : Object to be add
 * \return True if object as added. false otherwise
 **/
-bool Quadtree::add(sf::Sprite* obj)
+bool Quadtree::add(sf::Sprite obj)
 {
-    sf::FloatRect bound = obj->getGlobalBounds();
+    sf::FloatRect bound = obj.getGlobalBounds();
     if (!m_shape.intersects(bound))
     {
         if(DEBUG)
@@ -71,26 +76,30 @@ bool Quadtree::add(sf::Sprite* obj)
         return false;
     } else
     {
-        if (m_elements->size() < QUAD_NODE_CAPACITY && m_enable)
+        if (m_elements.size() < QUAD_NODE_CAPACITY && m_enable)
         {
             if(DEBUG)
             {
                 std::cout << "*--AJOUT--*" << std::endl;
                 std::cout << "Ajout : [x=" << bound.left << ";y=" << bound.top << ";width=" << bound.width << ";height=" << bound.height << "]" << std::endl;
-                std::cout << "dans le quad : [x=" << m_shape.left << ";y=" << m_shape.top << ";width=" << m_shape.width << ";height=" << m_shape.height << ":TAILLE=" << m_elements->size() << "]" << std::endl;
+                std::cout << "dans le quad : [x=" << m_shape.left << ";y=" << m_shape.top << ";width=" << m_shape.width << ";height=" << m_shape.height << ":TAILLE=" << m_elements.size() << "]" << std::endl;
                 std::cout << "*---FIN---*" << std::endl;
             }
-            m_elements->push_back(obj);
+            m_elements.push_back(std::make_shared<sf::Sprite>(obj));
+            if(DEBUG)
+            {
+                std::cout << "Storage capacity : " << m_elements.capacity() << std::endl;
+            }
             return true;
         } else
         {
-            if(m_elements->size() >= QUAD_NODE_CAPACITY && m_enable)
+            if(m_elements.size() >= QUAD_NODE_CAPACITY && m_enable)
             {
                 subdivide();
             }
 
             // On prepare la fragmentation du sprite
-            sf::IntRect tRect = obj->getTextureRect();
+            sf::IntRect tRect = obj.getTextureRect();
             if(DEBUG)
             {
                 std::cout << "*--------*" << std::endl;
@@ -98,12 +107,12 @@ bool Quadtree::add(sf::Sprite* obj)
                 std::cout << "*--------*" << std::endl;
                 std::cout << "tRect [x=" << tRect.left << ";y=" << tRect.top << ";w=" << tRect.width << ";h=" << tRect.height <<  "]" <<std::endl;
             }
-            SplitedSprite* spl = new SplitedSprite;
-            spl->origin = obj;
-            spl->NW = NULL;
-            spl->NE = NULL;
-            spl->SW = NULL;
-            spl->SE = NULL;
+            SplitedSprite spl = SplitedSprite();
+            spl.origin = std::make_shared<sf::Sprite>(obj);
+            spl.NW = NULL;
+            spl.NE = NULL;
+            spl.SW = NULL;
+            spl.SE = NULL;
             sf::IntRect tSpriteNW;
             sf::IntRect tSpriteNE;
             sf::IntRect tSpriteSW;
@@ -116,14 +125,14 @@ bool Quadtree::add(sf::Sprite* obj)
             sf::FloatRect shapeNE = m_northEast->getShape();
             sf::FloatRect shapeSW = m_southWest->getShape();
             sf::FloatRect shapeSE = m_southEast->getShape();
-            sf::Sprite* spriteNW = new sf::Sprite;
-            sf::Sprite* spriteNE = new sf::Sprite;
-            sf::Sprite* spriteSW = new sf::Sprite;
-            sf::Sprite* spriteSE = new sf::Sprite;
-            spriteNW->setTexture(*obj->getTexture());
-            spriteNE->setTexture(*obj->getTexture());
-            spriteSW->setTexture(*obj->getTexture());
-            spriteSE->setTexture(*obj->getTexture());
+            std::shared_ptr<sf::Sprite> spriteNW = std::make_shared<sf::Sprite>();
+            std::shared_ptr<sf::Sprite> spriteNE = std::make_shared<sf::Sprite>();
+            std::shared_ptr<sf::Sprite> spriteSW = std::make_shared<sf::Sprite>();
+            std::shared_ptr<sf::Sprite> spriteSE = std::make_shared<sf::Sprite>();
+            spriteNW->setTexture(*obj.getTexture());
+            spriteNE->setTexture(*obj.getTexture());
+            spriteSW->setTexture(*obj.getTexture());
+            spriteSE->setTexture(*obj.getTexture());
 
             /////////////
             //SPRITE NW//
@@ -248,16 +257,16 @@ bool Quadtree::add(sf::Sprite* obj)
                         {
                             std::cout << "Ajout dans tout les quadrant" << std::endl;
                         }
-                        spl->NW = spriteNW;
-                        spl->NE = spriteNE;
-                        spl->SW = spriteSW;
-                        spl->SE = spriteSE;
-                        m_splitedElements->push_back(spl);
+                        spl.NW = spriteNW;
+                        spl.NE = spriteNE;
+                        spl.SW = spriteSW;
+                        spl.SE = spriteSE;
+                        m_splitedElements.push_back(std::make_shared<SplitedSprite>(spl));
                         // On ajoute les 4 sprites au quadrant correspondant
-                        m_northWest->add(spriteNW);
-                        m_northEast->add(spriteNE);
-                        m_southWest->add(spriteSW);
-                        m_southEast->add(spriteSE);
+                        m_northWest->add(*spriteNW);
+                        m_northEast->add(*spriteNE);
+                        m_southWest->add(*spriteSW);
+                        m_southEast->add(*spriteSE);
                     } else  // Il est dans le quadrant NW et SW
                     {
                         /** Il faut couper le tile en 2 et l'ajouter dans les quadrants NW et SW**/
@@ -300,11 +309,11 @@ bool Quadtree::add(sf::Sprite* obj)
                         {
                             std::cout << "Ajout dans NW - SW" << std::endl;
                         }
-                        spl->NW = spriteNW;
-                        spl->SW = spriteSW;
-                        m_splitedElements->push_back(spl);
-                        m_northWest->add(spriteNW);
-                        m_southWest->add(spriteSW);
+                        spl.NW = spriteNW;
+                        spl.SW = spriteSW;
+                        m_splitedElements.push_back(std::make_shared<SplitedSprite>(spl));
+                        m_northWest->add(*spriteNW);
+                        m_southWest->add(*spriteSW);
                     } // On verifie si le tile est entre les quadrants NW et NE
                 } else if (shapeNE.intersects(bound))
                 {
@@ -349,11 +358,11 @@ bool Quadtree::add(sf::Sprite* obj)
                     {
                         std::cout << "Ajout dans NW - NE" << std::endl;
                     }
-                    spl->NW = spriteNW;
-                    spl->NE = spriteNE;
-                    m_splitedElements->push_back(spl);
-                    m_northWest->add(spriteNW);
-                    m_northEast->add(spriteNE);
+                    spl.NW = spriteNW;
+                    spl.NE = spriteNE;
+                    m_splitedElements.push_back(std::make_shared<SplitedSprite>(spl));
+                    m_northWest->add(*spriteNW);
+                    m_northEast->add(*spriteNE);
                 } else
                 { // Il est uniquement dans le quadrant NW
                     if(DEBUG)
@@ -411,11 +420,11 @@ bool Quadtree::add(sf::Sprite* obj)
                     {
                         std::cout << "Ajout dans NE - SE" << std::endl;
                     }
-                    spl->NE = spriteNE;
-                    spl->SE = spriteSE;
-                    m_splitedElements->push_back(spl);
-                    m_northEast->add(spriteNE);
-                    m_southEast->add(spriteSE);
+                    spl.NE = spriteNE;
+                    spl.SE = spriteSE;
+                    m_splitedElements.push_back(std::make_shared<SplitedSprite>(spl));
+                    m_northEast->add(*spriteNE);
+                    m_southEast->add(*spriteSE);
 
                 } else // Il est uniquement dans le quadrant NE
                 {
@@ -475,11 +484,11 @@ bool Quadtree::add(sf::Sprite* obj)
                     {
                         std::cout << "Ajout dans SW - SE" << std::endl;
                     }
-                    spl->SW = spriteSW;
-                    spl->SE = spriteSE;
-                    m_splitedElements->push_back(spl);
-                    m_southWest->add(spriteSW);
-                    m_southEast->add(spriteSE);
+                    spl.SW = spriteSW;
+                    spl.SE = spriteSE;
+                    m_splitedElements.push_back(std::make_shared<SplitedSprite>(spl));
+                    m_southWest->add(*spriteSW);
+                    m_southEast->add(*spriteSE);
                 } else // Il est uniquement dans le quadrant SW
                 {
                     if(DEBUG)
@@ -519,7 +528,7 @@ bool Quadtree::add(sf::Sprite* obj)
 * \param pos : The position of the object to be deleted
 * \return the deleted object
 **/
-std::vector<sf::Sprite*>* Quadtree::del(sf::FloatRect pos)
+std::vector<std::shared_ptr<sf::Sprite>> Quadtree::del(sf::FloatRect pos)
 {
     if(DEBUG)
     {
@@ -528,18 +537,19 @@ std::vector<sf::Sprite*>* Quadtree::del(sf::FloatRect pos)
         std::cout << "*-----*" << std::endl << std::endl;
         std::cout << "pos [x=" << pos.left << ";y=" << pos.top << ";w=" << pos.width << ":h=" << pos.height << "]" << std::endl;
     }
-    std::vector<sf::Sprite*>* delObjects = new std::vector<sf::Sprite*>;
-    std::vector<sf::Sprite*>* answer = new std::vector<sf::Sprite*>;
+    std::vector<std::shared_ptr<sf::Sprite>> delObjects = std::vector<std::shared_ptr<sf::Sprite>>();
+    std::vector<std::shared_ptr<sf::Sprite>> answer = std::vector<std::shared_ptr<sf::Sprite>>();
     if(!m_shape.intersects(pos)) {
+        answer.clear();
         return delObjects;
     }
 
-    if(m_elements->empty() && !m_enable)
+    if(m_elements.empty() && !m_enable)
     {
-        if(m_splitedElements->size() != 0)
+        if(m_splitedElements.size() != 0)
         {
             answer = eraseSplitedElement(pos);
-            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
+            delObjects.insert(delObjects.end(),answer.begin(),answer.end());
         }
         sf::FloatRect shapeNW = m_northWest->getShape();
         sf::FloatRect shapeNE = m_northEast->getShape();
@@ -548,22 +558,22 @@ std::vector<sf::Sprite*>* Quadtree::del(sf::FloatRect pos)
         if(shapeNW.intersects(pos))
         {
             answer = m_northWest->del(pos);
-            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
+            delObjects.insert(delObjects.end(),answer.begin(),answer.end());
         }
         if(shapeNE.intersects(pos))
         {
             answer = m_northEast->del(pos);
-            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
+            delObjects.insert(delObjects.end(),answer.begin(),answer.end());
         }
         if(shapeSW.intersects(pos))
         {
             answer = m_southWest->del(pos);
-            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
+            delObjects.insert(delObjects.end(),answer.begin(),answer.end());
         }
         if(shapeSE.intersects(pos))
         {
             answer = m_southEast->del(pos);
-            delObjects->insert(delObjects->end(),answer->begin(),answer->end());
+            delObjects.insert(delObjects.end(),answer.begin(),answer.end());
         }
         if(DEBUG)
         {
@@ -575,17 +585,34 @@ std::vector<sf::Sprite*>* Quadtree::del(sf::FloatRect pos)
         }
     } else
     {
-        std::vector<sf::Sprite*>::iterator it = m_elements->begin();
-        for( ; it != m_elements->end(); )
+        std::vector<std::shared_ptr<sf::Sprite>>::iterator it = m_elements.begin();
+        for( ; it != m_elements.end(); )
         {
-            if((*it)->getGlobalBounds().intersects(pos))
+            if((*it->get()).getGlobalBounds().intersects(pos))
             {
-                delObjects->push_back(*it);
-                it = m_elements->erase(it);
+                if(DEBUG)
+                {
+                    std::cout << "Count of Shared Pointer : " << it->use_count() << std::endl;
+                }
+                delObjects.push_back(*it);
+                if(DEBUG)
+                {
+                    std::cout << "Count of Shared Pointer after push : " << it->use_count() << std::endl;
+                }
+                it = m_elements.erase(it);
+                if(DEBUG)
+                {
+                    std::cout << "Storage capacity : " << m_elements.capacity() << std::endl;
+                }
             } else
             {
                 ++it;
             }
+        }
+        m_elements.shrink_to_fit();
+        if(DEBUG)
+        {
+            std::cout << "Storage capacity after del: " << m_elements.capacity() << std::endl;
         }
     }
     if(DEBUG)
@@ -594,6 +621,7 @@ std::vector<sf::Sprite*>* Quadtree::del(sf::FloatRect pos)
         std::cout << "*-END-*" << std::endl;
         std::cout << "*-----*" << std::endl << std::endl;
     }
+    answer.clear();
     return delObjects;
 }
 
@@ -606,7 +634,7 @@ std::vector<sf::Sprite*>* Quadtree::del(sf::FloatRect pos)
 * \param obj : The object on which we want to make query
 * \return vector of element around obj. Return NULL if obj is not in quadrant
 **/
-std::vector<sf::Sprite*>* Quadtree::queryRange(sf::FloatRect pos)
+ std::vector<std::shared_ptr<sf::Sprite>> Quadtree::queryRange(sf::FloatRect pos)
 {
     if(DEBUG)
     {
@@ -616,7 +644,7 @@ std::vector<sf::Sprite*>* Quadtree::queryRange(sf::FloatRect pos)
         std::cout << "Query at [x=" << pos.left << ";y=" << pos.top << ";width=" << pos.width << ";height=" << pos.height << "]" << std::endl;
         std::cout << "On shape [x=" << m_shape.left << ";y=" << m_shape.top << ";width=" << m_shape.width << ";height=" << m_shape.height << "]" << std::endl;
     }
-    std::vector<sf::Sprite*>* answer = new std::vector<sf::Sprite*>;
+     std::vector<std::shared_ptr<sf::Sprite>> answer =  std::vector<std::shared_ptr<sf::Sprite>>();
     if(DEBUG)
     {
         std::cout << "answer create" << std::endl;
@@ -643,27 +671,28 @@ std::vector<sf::Sprite*>* Quadtree::queryRange(sf::FloatRect pos)
         {
             std::cout << "Le quad [x=" << m_shape.left << ";y=" << m_shape.top << ";width=" << m_shape.width << ":height=" << m_shape.height << "] !enable, on recherche dans les fils" << std::endl;
         }
-        std::vector<sf::Sprite*>* tmp = new std::vector<sf::Sprite*>;
+        std::vector<std::shared_ptr<sf::Sprite>> tmp = std::vector<std::shared_ptr<sf::Sprite>>();
         if(m_northWest->getShape().intersects(pos))
         {
             tmp = m_northWest->queryRange(pos);
-            answer->insert(answer->end(),tmp->begin(),tmp->end());
+            answer.insert(answer.end(),tmp.begin(),tmp.end());
         }
         if (m_northEast->getShape().intersects(pos))
         {
             tmp = m_northEast->queryRange(sf::FloatRect(pos));
-            answer->insert(answer->end(),tmp->begin(),tmp->end());
+            answer.insert(answer.end(),tmp.begin(),tmp.end());
         }
         if (m_southWest->getShape().intersects(pos))
         {
             tmp = m_southWest->queryRange(sf::FloatRect(pos));
-            answer->insert(answer->end(),tmp->begin(),tmp->end());
+            answer.insert(answer.end(),tmp.begin(),tmp.end());
         }
         if (m_southEast->getShape().intersects(pos))
         {
             tmp = m_southEast->queryRange(sf::FloatRect(pos));
-            answer->insert(answer->end(),tmp->begin(),tmp->end());
+            answer.insert(answer.end(),tmp.begin(),tmp.end());
         }
+        tmp.clear();
         return answer;
     }
 }
@@ -690,17 +719,18 @@ void Quadtree::subdivide()
     m_southWest = new Quadtree(m_shape.left, m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f);
     m_southEast = new Quadtree(m_shape.left+(m_shape.width/2.0f), m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f);
     m_enable = false;
-    if(!m_elements->empty())
+    if(!m_elements.empty())
     {
         if(DEBUG)
         {
             std::cout << "Le quad maitre à des elements" << std::endl;
         }
-        for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
+        for( std::vector<std::shared_ptr<sf::Sprite>>::iterator it = m_elements.begin(); it != m_elements.end(); it++)
         {
-            add(*it);
+            add(*it->get());
         }
-        m_elements->clear();
+        m_elements.clear();
+        m_elements.shrink_to_fit();
         if(DEBUG)
         {
             std::cout << "*-------------------------*" << std::endl;
@@ -727,21 +757,29 @@ void Quadtree::merge()
         std::cout << "*---------*" << std::endl;
         std::cout << "*  MERGE  *" << std::endl;
         std::cout << "*---------*" << std::endl;
-        std::cout << "splited size : " << m_splitedElements->size() << std::endl;
+        std::cout << "splited size : " << m_splitedElements.size() << std::endl;
     }
-    m_elements = new std::vector<sf::Sprite*>;
-    std::vector<SplitedSprite*>::iterator it = m_splitedElements->begin();
-    int splitedSize = m_splitedElements->size();
+    std::vector<std::shared_ptr<SplitedSprite>>::iterator it = m_splitedElements.begin();
+    int splitedSize = m_splitedElements.size();
     for(int i = 0; i < splitedSize; i++)
     {
-        m_elements->push_back(m_splitedElements->at(0)->origin);
-        eraseSplitedElement(m_splitedElements->at(0)->origin->getGlobalBounds());
+        m_elements.push_back(m_splitedElements.at(0)->origin);
+        eraseSplitedElement(m_splitedElements.at(0)->origin->getGlobalBounds());
     }
-
-    m_elements->insert(m_elements->end(),m_northWest->getElements()->begin(),m_northWest->getElements()->end());
-    m_elements->insert(m_elements->end(),m_northEast->getElements()->begin(),m_northEast->getElements()->end());
-    m_elements->insert(m_elements->end(),m_southWest->getElements()->begin(),m_southWest->getElements()->end());
-    m_elements->insert(m_elements->end(),m_southEast->getElements()->begin(),m_southEast->getElements()->end());
+    if(DEBUG)
+    {
+        std::cout << "SplitedSprite done" << std::endl;
+        std::cout << "m_element : " << m_elements.size() << std::endl;
+    }
+    std::vector<std::shared_ptr<sf::Sprite>> tmp;
+    tmp = m_northWest->getElements();
+    m_elements.insert(std::end(m_elements),std::begin(tmp),std::end(tmp));
+    tmp = m_northEast->getElements();
+    m_elements.insert(std::end(m_elements),std::begin(tmp),std::end(tmp));
+    tmp = m_southWest->getElements();
+    m_elements.insert(std::end(m_elements),std::begin(tmp),std::end(tmp));
+    tmp = m_southEast->getElements();
+    m_elements.insert(std::end(m_elements),std::begin(tmp),std::end(tmp));
     clear();
     if(DEBUG)
     {
@@ -761,59 +799,63 @@ void Quadtree::merge()
 * \return void
 **/
 
-std::vector<sf::Sprite*>* Quadtree::eraseSplitedElement(sf::FloatRect pos)
+ std::vector<std::shared_ptr<sf::Sprite>> Quadtree::eraseSplitedElement(sf::FloatRect pos)
 {
-    std::vector<sf::Sprite*>* delObjects = new std::vector<sf::Sprite*>;
-    std::vector<SplitedSprite*>::iterator it = m_splitedElements->begin();
-    for( ; it != m_splitedElements->end(); )
+    std::vector<std::shared_ptr<sf::Sprite>>delObjects = std::vector<std::shared_ptr<sf::Sprite>>();
+    std::vector<std::shared_ptr<SplitedSprite>>::iterator it = m_splitedElements.begin();
+    for( ; it != m_splitedElements.end(); )
     {
-        if((*it)->origin->getGlobalBounds().intersects(pos))
+        if((*it->get()).origin->getGlobalBounds().intersects(pos))
         {
-            delObjects->push_back((*it)->origin);
+            delObjects.push_back((*it->get()).origin);
             if(DEBUGLOCAL)
             {
-                sf::FloatRect rect = (*it)->origin->getGlobalBounds();
+                sf::FloatRect rect = (*it->get()).origin->getGlobalBounds();
                 std::cout << "Le sprite [x=" << rect.left << ";y=" << rect.top << ";w=" << rect.width << ";h=" << rect.height << "] est a supprimer" << std::endl;
             }
-            if((*it)->NW != NULL)
+            if((*it->get()).NW != NULL)
             {
                 if(DEBUGLOCAL)
                 {
                     std::cout << "Suppression en NW" << std::endl;
                 }
-                m_northWest->del((*it)->NW->getGlobalBounds());
+                m_northWest->del((*it->get()).NW->getGlobalBounds());
             }
-            if((*it)->NE != NULL)
+            if((*it->get()).NE != NULL)
             {
                 if(DEBUGLOCAL)
                 {
                     std::cout << "Suppression en NE" << std::endl;
                 }
-                m_northEast->del((*it)->NE->getGlobalBounds());
+                m_northEast->del((*it->get()).NE->getGlobalBounds());
             }
-            if((*it)->SW != NULL)
+            if((*it->get()).SW != NULL)
             {
                 if(DEBUGLOCAL)
                 {
                     std::cout << "Suppression en SW" << std::endl;
                 }
-                m_southWest->del((*it)->SW->getGlobalBounds());
+                m_southWest->del((*it->get()).SW->getGlobalBounds());
             }
-            if((*it)->SE != NULL)
+            if((*it->get()).SE != NULL)
             {
                 if(DEBUGLOCAL)
                 {
                     std::cout << "Suppression en SE" << std::endl;
                 }
-                m_southEast->del((*it)->SE->getGlobalBounds());
+                m_southEast->del((*it->get()).SE->getGlobalBounds());
             }
-            it = m_splitedElements->erase(it);
-
+            if(DEBUG)
+            {
+                std::cout << "Shared pointer count : " << it->use_count() << std::endl;
+            }
+            it = m_splitedElements.erase(it);
         } else
         {
             ++it;
         }
     }
+    m_splitedElements.shrink_to_fit();
     return delObjects;
 }
 
@@ -858,7 +900,21 @@ void Quadtree::clear()
         {
             std::cout << "*--CLEAR--*" << std::endl;
         }
-        m_elements->clear();
+        if(DEBUG)
+        {
+            for(std::vector<std::shared_ptr<sf::Sprite>>::iterator it = m_elements.begin(); it != m_elements.end(); it++)
+            {
+                std::cout << "Count of Shared Pointer : " << it->use_count() << std::endl;
+            }
+        }
+        m_elements.clear();
+        m_splitedElements.clear();
+        m_elements.shrink_to_fit();
+        m_splitedElements.shrink_to_fit();
+        if(DEBUG)
+        {
+            std::cout << "Storage capacity : " << m_elements.capacity() << std::endl;
+        }
     }
     if(DEBUG)
     {
@@ -880,7 +936,7 @@ void Quadtree::clear()
 void Quadtree::draw(sf::RenderWindow* window)
 {
     window->draw(m_boundary);
-    if(m_elements->empty() && m_northWest != NULL && m_northEast != NULL && m_southWest != NULL && m_southEast != NULL)
+    if(m_elements.empty() && m_northWest != NULL && m_northEast != NULL && m_southWest != NULL && m_southEast != NULL)
     {
         m_northWest->draw(window);
         m_northEast->draw(window);
@@ -890,9 +946,9 @@ void Quadtree::draw(sf::RenderWindow* window)
     {
         if(m_displayTile)
         {
-            for(std::vector<sf::Sprite*>::iterator it = m_elements->begin(); it != m_elements->end(); it++)
+            for(std::vector<std::shared_ptr<sf::Sprite>>::iterator it = m_elements.begin(); it != m_elements.end(); it++)
             {
-                window->draw(**it);
+                window->draw(*it->get());
             }
         }
     }
@@ -922,7 +978,7 @@ int Quadtree::nbElement()
 {
     if(m_enable)
     {
-        return m_elements->size();
+        return m_elements.size();
     } else
     {
         return m_northWest->nbElement() + m_northEast->nbElement() + m_southWest->nbElement() + m_southEast->nbElement();

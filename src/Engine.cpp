@@ -45,14 +45,14 @@ bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
     sf::Vector2f initPos = box1.getPosition();
     box1.setPosition(initPos+motion);
     // TODO : gerer la collision quand le char est entre 2-3-4 quad
-    std::vector<sf::Sprite*>* listObject = universe->queryRange(box1.getGlobalBounds());
-    if(listObject->size() > 0)
+    std::vector<std::shared_ptr<sf::Sprite>> listObject = universe->queryRange(box1.getGlobalBounds());
+    if(listObject.size() > 0)
     {
         if(DEBUG)
         {
-            std::cout << "Il y a " << listObject->size() << " en possible collision" << std::endl;
+            std::cout << "Il y a " << listObject.size() << " en possible collision" << std::endl;
         }
-        for(std::vector<sf::Sprite*>::iterator it = listObject->begin(); it != listObject->end(); it++)
+        for(std::vector<std::shared_ptr<sf::Sprite>>::iterator it = listObject.begin(); it != listObject.end(); it++)
         {
            if(collisionAABB((*it)->getGlobalBounds(),box1.getGlobalBounds()))
            {
