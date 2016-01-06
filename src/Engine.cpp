@@ -27,15 +27,15 @@ bool Engine::collisionAABB(sf::FloatRect box1, sf::FloatRect box2)
 }
 
 /**
-* \fn move(sf::FloatRect box1, sf::Vector2f motion)
+* \fn move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
 *
 * \brief Try if box1 can move correctly by motion
 *
-* \param box1 : The AABB to test, motion : Motion Vector, universe : Quadtree which represents world
+* \param box1 : The Sprite to test, motion : Motion Vector, universe : Quadtree which represents world
 * \return True if the movement of box1 by motion is correct. False otherwise
 **/
 bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
-{// TODO
+{
     if(DEBUG)
     {
         std::cout << "*-----------------*" << std::endl;
@@ -44,7 +44,6 @@ bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
     }
     sf::Vector2f initPos = box1.getPosition();
     box1.setPosition(initPos+motion);
-    // TODO : gerer la collision quand le char est entre 2-3-4 quad
     std::vector<std::shared_ptr<sf::Sprite>> listObject = universe->queryRange(box1.getGlobalBounds());
     if(listObject.size() > 0)
     {
@@ -73,17 +72,6 @@ bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
         std::cout << "Pas de collision " << std::endl;
     }
     return true;
-
-    /*
-    box1.setPosition(box1.getPosition()+motion);
-    std::vector<sf::Sprite*>* listObject = universe->queryRange(box1.getPosition());
-    if(listObject->size() == 0)
-    {
-        return true;
-    } else {
-        return false;
-    }
-*/
 }
 
 /**

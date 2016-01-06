@@ -4,14 +4,6 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 
-/*
-struct QuadTree
-{
-    sf::Vector2f bbox;
-    QuadTree* child[4];
-    std::list<sf::Sprite*> objects;
-};*/
-
 struct SplitedSprite
 {
     std::shared_ptr<sf::Sprite> origin;

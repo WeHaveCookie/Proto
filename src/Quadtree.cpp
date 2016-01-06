@@ -1,5 +1,14 @@
 #include "Quadtree.hpp"
 
+/**
+*
+* \fn Quadtree(float x, float y, float width, float height)
+*
+* \brief Basic constructor of Quadtree
+*
+* \param x & y : position of Quatree, width : width of Quatree, height : height of Quatree
+* \return
+**/
 Quadtree::Quadtree(float x, float y, float width, float height)
 {
     m_boundary.setPosition(x,y);
@@ -20,6 +29,15 @@ Quadtree::Quadtree(float x, float y, float width, float height)
     }
 }
 
+/**
+*
+* \fn ~Quadtree()
+*
+* \brief Destructor of quadtree
+*
+* \param
+* \return
+**/
 Quadtree::~Quadtree()
 {
     if(DEBUG)
@@ -39,12 +57,12 @@ Quadtree::~Quadtree()
 
 /**
 *
-* \fn Quadtree(std::list<sf::Sprite*> obj)
+* \fn Quadtree(float x, float y, float width, float height,  std::vector<std::shared_ptr<sf::Sprite>> obj)
 *
-* \brief Built a Quadtree with a existing Segment
+* \brief Built a Quadtree with a existing vector of object
 *
-* \param obj : List of Object
-* \return none. Built the Quadtree which matching to segment
+* \param obj : vector of Object
+* \return Built the Quadtree which matching to object
 **/
 Quadtree::Quadtree(float x, float y, float width, float height,  std::vector<std::shared_ptr<sf::Sprite>> obj)
 {
@@ -57,7 +75,7 @@ Quadtree::Quadtree(float x, float y, float width, float height,  std::vector<std
 
 /**
 *
-* \fn add(sf::Sprite* obj)
+* \fn add(sf::Sprite obj)
 *
 * \brief Add a object to the Quadtree
 *
@@ -526,7 +544,7 @@ bool Quadtree::add(sf::Sprite obj)
 * \brief Delete a object from Quadtree at position pos
 *
 * \param pos : The position of the object to be deleted
-* \return the deleted object
+* \return vector of deleted objects
 **/
 std::vector<std::shared_ptr<sf::Sprite>> Quadtree::del(sf::FloatRect pos)
 {
@@ -632,7 +650,7 @@ std::vector<std::shared_ptr<sf::Sprite>> Quadtree::del(sf::FloatRect pos)
 * \brief Search and return the vector of element around obj
 *
 * \param obj : The object on which we want to make query
-* \return vector of element around obj. Return NULL if obj is not in quadrant
+* \return vector of element around obj. Return empty vector if obj is not in quadrant
 **/
  std::vector<std::shared_ptr<sf::Sprite>> Quadtree::queryRange(sf::FloatRect pos)
 {
@@ -745,7 +763,7 @@ void Quadtree::subdivide()
 *
 * \fn merge()
 *
-* \brief Merge the quadtree when Sum(child element) < QUAD_NODE_CAPACITY
+* \brief Merge the quadtree when Sum(child element) < QUAD_NODE_CAPACITY and restore splitted sprite
 *
 * \param
 * \return void
@@ -793,10 +811,10 @@ void Quadtree::merge()
 *
 * \fn eraseSplitedElement(sf::FloatRect pos)
 *
-* \brief Remove Deprecated Object (When tile is split into different quadrant
+* \brief Remove Deprecated Object (When tile is split into different quadrant)
 *
 * \param
-* \return void
+* \return vector of deleted object
 **/
 
  std::vector<std::shared_ptr<sf::Sprite>> Quadtree::eraseSplitedElement(sf::FloatRect pos)
@@ -974,6 +992,15 @@ void Quadtree::displayTile(bool b)
     }
 }
 
+/**
+*
+* \fn nbElement()
+*
+* \brief this function allow to get the number of element in this quadrant
+*
+* \param
+* \return return the size of m_element
+**/
 int Quadtree::nbElement()
 {
     if(m_enable)

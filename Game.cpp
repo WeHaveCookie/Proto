@@ -4,7 +4,6 @@
 #include <iostream>
 #include <time.h>
 
-
 #include "include/Character.hpp"
 #include "Quadtree.hpp"
 
@@ -20,10 +19,7 @@ int main()
     //Pour la creation de case random
     srand(time(NULL));
     bool m_add = true;
-    //std::vector<sf::Sprite*> vectCase;
 
-    //world->subdivide();
-    //world->add(&spr);
     sf::Texture txt;
     if(!txt.loadFromFile(defaultTilePath+"Tileset.png")){
         //RAISE A LOAD TEXTURE EXCEPTION
@@ -168,8 +164,6 @@ int main()
         world->draw(window);
         window->display();
     }
-
-    std::string name;
 
     delete player;
     delete world;
