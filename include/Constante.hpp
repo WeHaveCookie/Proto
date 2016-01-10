@@ -3,6 +3,7 @@
 
 // Constant for Gravity & Mouvement
 #define DEFAULT_GRAVITY 9.81
+#define PI 3.14
 #define DEFAULT_SPEED 1
 
 // Constant for Quadtree
@@ -15,5 +16,7 @@
 std::string const defaultCharPath = "Ressources/Character/";
 std::string const defaultTilePath = "Ressources/Tileset/";
 
+#define DEBUG false
+#define DEBUGLOCAL false
 
 #endif // CONSTANTES_HPP

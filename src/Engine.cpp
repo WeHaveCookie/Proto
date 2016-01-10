@@ -34,7 +34,7 @@ bool Engine::collisionAABB(sf::FloatRect box1, sf::FloatRect box2)
 * \param box1 : The Sprite to test, motion : Motion Vector, universe : Quadtree which represents world
 * \return True if the movement of box1 by motion is correct. False otherwise
 **/
-bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
+void Engine::move(Entity* e, sf::Vector2f motion, Quadtree* universe)
 {
     if(DEBUG)
     {
@@ -42,8 +42,12 @@ bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
         std::cout << "*  ENGINE : MOVE  *" << std::endl;
         std::cout << "*-----------------*" << std::endl;
     }
-    sf::Vector2f initPos = box1.getPosition();
-    box1.setPosition(initPos+motion);
+//    sf::Vector2f newPos = e->getSprite().getPosition();
+//    newPos += motion;
+
+
+    /*box1.setPosition(initPos+motion);
+
     std::vector<std::shared_ptr<sf::Sprite>> listObject = universe->queryRange(box1.getGlobalBounds());
     if(listObject.size() > 0)
     {
@@ -63,15 +67,13 @@ bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
                    std::cout << "Char : [x=" << box1.getGlobalBounds().left << ";y=" << box1.getGlobalBounds().top << ";width=" << box1.getGlobalBounds().width << ";height=" << box1.getGlobalBounds().height <<  "]" << std::endl;
                    std::cout << "Tile : [x=" << (*it)->getGlobalBounds().left << ";y=" << (*it)->getGlobalBounds().top << ";width=" << (*it)->getGlobalBounds().width << ";height=" << (*it)->getGlobalBounds().height << "]" << std::endl;
                }
-               return false;
            }
         }
-    }
+    }*/
     if(DEBUG)
     {
         std::cout << "Pas de collision " << std::endl;
     }
-    return true;
 }
 
 /**
@@ -82,7 +84,7 @@ bool Engine::move(sf::Sprite box1, sf::Vector2f motion, Quadtree* universe)
 * \param box1 : The AABB to test, motion : Motion Vector, universe : Quadtree which represents world
 * \return True if the movement of box1 by motion is correct. False otherwise
 **/
-/*bool Engine::jump(sf::FloatRect box1, sf::Vector2f motion, Quadtree* universe)
+void Engine::jump(Entity* e, sf::Vector2f motion, Quadtree* universe)
 {
 
-}*/
+}

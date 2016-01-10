@@ -5,7 +5,8 @@
 #include <time.h>
 
 #include "include/Character.hpp"
-#include "Quadtree.hpp"
+#include "include/Quadtree.hpp"
+#include "include/Engine.hpp"
 
 int main()
 {
@@ -13,7 +14,7 @@ int main()
     window->setFramerateLimit(60);
 
     //Creation d'un personnage
-    Character* player = new Character("player.png");
+    Character* player = new Character("player.png",sf::IntRect(13,9,51,45));
     Quadtree* world = new Quadtree(0.0f,0.0f,window->getSize().x,window->getSize().y);
 
     //Pour la creation de case random
@@ -140,22 +141,22 @@ int main()
         // On gère les event clavier hors du catch pour permettre la fluidite des deplacements
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
         {
-            player->move(sf::Vector2f(5,0),world);
+            Engine::move(player,sf::Vector2f(5,0),world);
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
         {
-            player->move(sf::Vector2f(-5,0),world);
+            Engine::move(player,sf::Vector2f(-5,0),world);
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
         {
-            player->move(sf::Vector2f(0,-5),world);
+            Engine::move(player,sf::Vector2f(0,-5),world);
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
-            player->move(sf::Vector2f(0,5),world);
+            Engine::move(player,sf::Vector2f(0,5),world);
         }
 
 

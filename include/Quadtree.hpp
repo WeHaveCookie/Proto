@@ -10,8 +10,8 @@
 #include "Structure.hpp"
 #include "Constante.hpp"
 
-#define DEBUG 1
-#define DEBUGLOCAL 0
+
+
 class Quadtree
 {
 
