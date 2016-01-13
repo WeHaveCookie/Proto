@@ -1,7 +1,8 @@
 #include "../include/Engine.hpp"
 
-Engine::Engine()
+Engine::Engine(std::shared_ptr<Quadtree> universe)
 {
+    m_universe = universe;
     //ctor
 }
 
@@ -34,7 +35,7 @@ bool Engine::collisionAABB(sf::FloatRect box1, sf::FloatRect box2)
 * \param box1 : The Sprite to test, motion : Motion Vector, universe : Quadtree which represents world
 * \return True if the movement of box1 by motion is correct. False otherwise
 **/
-void Engine::move(Entity* e, sf::Vector2f motion, Quadtree* universe)
+bool Engine::isAbleToMove(sf::FloatRect box)
 {
     if(DEBUG)
     {
@@ -42,13 +43,8 @@ void Engine::move(Entity* e, sf::Vector2f motion, Quadtree* universe)
         std::cout << "*  ENGINE : MOVE  *" << std::endl;
         std::cout << "*-----------------*" << std::endl;
     }
-//    sf::Vector2f newPos = e->getSprite().getPosition();
-//    newPos += motion;
 
-
-    /*box1.setPosition(initPos+motion);
-
-    std::vector<std::shared_ptr<sf::Sprite>> listObject = universe->queryRange(box1.getGlobalBounds());
+    std::vector<std::shared_ptr<sf::Sprite>> listObject = m_universe->queryRange(box);
     if(listObject.size() > 0)
     {
         if(DEBUG)
@@ -57,19 +53,19 @@ void Engine::move(Entity* e, sf::Vector2f motion, Quadtree* universe)
         }
         for(std::vector<std::shared_ptr<sf::Sprite>>::iterator it = listObject.begin(); it != listObject.end(); it++)
         {
-           if(collisionAABB((*it)->getGlobalBounds(),box1.getGlobalBounds()))
+           if(collisionAABB((*it)->getGlobalBounds(),box))
            {
                if(DEBUG)
                {
                    std::cout << "*-----------*" << std::endl;
                    std::cout << "  COLLISION  " << std::endl;
                    std::cout << "*-----------*" << std::endl;
-                   std::cout << "Char : [x=" << box1.getGlobalBounds().left << ";y=" << box1.getGlobalBounds().top << ";width=" << box1.getGlobalBounds().width << ";height=" << box1.getGlobalBounds().height <<  "]" << std::endl;
+                   std::cout << "Char : [x=" << box.left << ";y=" << box.top << ";width=" << box.width << ";height=" << box.height <<  "]" << std::endl;
                    std::cout << "Tile : [x=" << (*it)->getGlobalBounds().left << ";y=" << (*it)->getGlobalBounds().top << ";width=" << (*it)->getGlobalBounds().width << ";height=" << (*it)->getGlobalBounds().height << "]" << std::endl;
                }
            }
         }
-    }*/
+    }
     if(DEBUG)
     {
         std::cout << "Pas de collision " << std::endl;
@@ -77,14 +73,14 @@ void Engine::move(Entity* e, sf::Vector2f motion, Quadtree* universe)
 }
 
 /**
-* \fn jump(sf::FloatRect box1, sf::Vector2f motion)
+* \fn jump(sf::FloatRect box1)
 *
 * \brief Try if box1 can jump correctly by motion
 *
-* \param box1 : The AABB to test, motion : Motion Vector, universe : Quadtree which represents world
+* \param box1 : The AABB to test
 * \return True if the movement of box1 by motion is correct. False otherwise
 **/
-void Engine::jump(Entity* e, sf::Vector2f motion, Quadtree* universe)
+bool Engine::isAbleToJump(sf::FloatRect box)
 {
-
+    return true;
 }

@@ -9,8 +9,8 @@
 * \param path : Path of sprite character
 * \return
 **/
-Character::Character(std::string path, sf::IntRect textRect) :
-Entity(path,textRect)
+Character::Character(std::string path, sf::IntRect textRect, sf::Vector2f initPos, std::shared_ptr<Engine> engine) :
+Entity(path,textRect,initPos,engine)
 {
 }
 

@@ -38,10 +38,10 @@ class Quadtree
         void subdivide();
         void merge();
         std::vector<std::shared_ptr<sf::Sprite>> eraseSplitedElement(sf::FloatRect pos);
-        Quadtree* m_northWest;
-        Quadtree* m_northEast;
-        Quadtree* m_southWest;
-        Quadtree* m_southEast;
+        std::shared_ptr<Quadtree> m_northWest;
+        std::shared_ptr<Quadtree> m_northEast;
+        std::shared_ptr<Quadtree> m_southWest;
+        std::shared_ptr<Quadtree> m_southEast;
         std::vector<std::shared_ptr<sf::Sprite>> m_elements;
         std::vector<std::shared_ptr<SplitedSprite>> m_splitedElements;
         sf::RectangleShape m_boundary;

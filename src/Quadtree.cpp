@@ -17,10 +17,10 @@ Quadtree::Quadtree(float x, float y, float width, float height)
     m_boundary.setOutlineThickness(1.0f);
     m_boundary.setOutlineColor(sf::Color::Green);
     m_shape = sf::FloatRect(x,y,width,height);
-    m_northWest = NULL;
-    m_northEast = NULL;
-    m_southWest = NULL;
-    m_southEast = NULL;
+    m_northWest.reset();
+    m_northEast.reset();
+    m_southWest.reset();
+    m_southEast.reset();
     m_enable = true;
     m_displayTile = true;
     if(DEBUG)
@@ -45,10 +45,10 @@ Quadtree::~Quadtree()
         std::cout << "~Quadtree" << std::endl;
     }
     if(!m_enable) {
-        delete m_northWest;
-        delete m_northEast;
-        delete m_southWest;
-        delete m_southEast;
+        m_northWest.reset();
+        m_northEast.reset();
+        m_southWest.reset();
+        m_southEast.reset();
     }
     m_elements.clear();
     m_splitedElements.clear();
@@ -127,10 +127,10 @@ bool Quadtree::add(sf::Sprite obj)
             }
             SplitedSprite spl = SplitedSprite();
             spl.origin = std::make_shared<sf::Sprite>(obj);
-            spl.NW = NULL;
-            spl.NE = NULL;
-            spl.SW = NULL;
-            spl.SE = NULL;
+            spl.NW.reset();
+            spl.NE.reset();
+            spl.SW.reset();
+            spl.SE.reset();
             sf::IntRect tSpriteNW;
             sf::IntRect tSpriteNE;
             sf::IntRect tSpriteSW;
@@ -732,10 +732,10 @@ void Quadtree::subdivide()
         std::cout << "*On subdivise le quad en 4*" << std::endl;
         std::cout << "*-------------------------*" << std::endl;
     }
-    m_northWest = new Quadtree(m_shape.left, m_shape.top, m_shape.width/2.0f, m_shape.height/2.0f);
-    m_northEast = new Quadtree(m_shape.left+(m_shape.width/2.0f), m_shape.top, m_shape.width/2.0f, m_shape.height/2.0f);
-    m_southWest = new Quadtree(m_shape.left, m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f);
-    m_southEast = new Quadtree(m_shape.left+(m_shape.width/2.0f), m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f);
+    m_northWest = std::make_shared<Quadtree>(Quadtree(m_shape.left, m_shape.top, m_shape.width/2.0f, m_shape.height/2.0f));
+    m_northEast = std::make_shared<Quadtree>(Quadtree(m_shape.left+(m_shape.width/2.0f), m_shape.top, m_shape.width/2.0f, m_shape.height/2.0f));
+    m_southWest = std::make_shared<Quadtree>(Quadtree(m_shape.left, m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f));
+    m_southEast = std::make_shared<Quadtree>(Quadtree(m_shape.left+(m_shape.width/2.0f), m_shape.top+(m_shape.height/2.0f), m_shape.width/2.0f, m_shape.height/2.0f));
     m_enable = false;
     if(!m_elements.empty())
     {
@@ -904,10 +904,10 @@ void Quadtree::clear()
         {
             std::cout << "*--ON DELETE--*" << std::endl;
         }
-        delete m_northWest;
-        delete m_northEast;
-        delete m_southWest;
-        delete m_southEast;
+        m_northWest.reset();
+        m_northEast.reset();
+        m_southWest.reset();
+        m_southEast.reset();
         m_northWest = NULL;
         m_northEast = NULL;
         m_southWest = NULL;

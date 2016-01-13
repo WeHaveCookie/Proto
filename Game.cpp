@@ -14,8 +14,9 @@ int main()
     window->setFramerateLimit(60);
 
     //Creation d'un personnage
-    Character* player = new Character("player.png",sf::IntRect(13,9,51,45));
-    Quadtree* world = new Quadtree(0.0f,0.0f,window->getSize().x,window->getSize().y);
+    std::shared_ptr<Quadtree> world = std::make_shared<Quadtree>(Quadtree(0.0f,0.0f,window->getSize().x,window->getSize().y));
+    std::shared_ptr<Engine> engine = std::make_shared<Engine>(Engine(world));
+    std::shared_ptr<Character> player = std::make_shared<Character>(Character("player.png",sf::IntRect(13,9,51,45),sf::Vector2f(20,20),engine));
 
     //Pour la creation de case random
     srand(time(NULL));
@@ -70,9 +71,9 @@ int main()
                                 break;
                             case sf::Keyboard::P :
                                 std::cout << "/WARNING\\ Delete world !" << std::endl;
-                                delete world;
+                                world.reset();
                                 std::cout << "WORLD DELETE" << std::endl;
-                                world = new Quadtree(0.0f,0.0f,window->getSize().x,window->getSize().y);
+                                world = std::make_shared<Quadtree>(Quadtree(0.0f,0.0f,window->getSize().x,window->getSize().y));
                                 std::cout << "New world create" << std::endl;
                                 break;
                             default :
@@ -141,22 +142,22 @@ int main()
         // On gère les event clavier hors du catch pour permettre la fluidite des deplacements
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
         {
-            Engine::move(player,sf::Vector2f(5,0),world);
+            player->move(sf::Vector2f(5,0));
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
         {
-            Engine::move(player,sf::Vector2f(-5,0),world);
+            player->move(sf::Vector2f(-5,0));
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
         {
-            Engine::move(player,sf::Vector2f(0,-5),world);
+            player->move(sf::Vector2f(0,-5));
         }
 
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
         {
-            Engine::move(player,sf::Vector2f(0,5),world);
+            player->move(sf::Vector2f(0,5));
         }
 
 
@@ -166,8 +167,8 @@ int main()
         window->display();
     }
 
-    delete player;
-    delete world;
+    player.reset();
+    world.reset();
     delete window;
     return 0;
 }
