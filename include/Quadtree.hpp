@@ -29,6 +29,7 @@ class Quadtree
         void displayTile(bool b);
         inline bool isDisplayTile() {return m_displayTile;}
         inline bool isEnable() {return m_enable;}
+        inline sf::RectangleShape getBoundary(){return m_boundary;}
 
     protected:
         inline bool isEmpty() {return m_elements.empty();}

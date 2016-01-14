@@ -9,6 +9,8 @@
 #include "Constante.hpp"
 #include "Utility.hpp"
 
+#define DEBUG 1
+
 class Engine;
 
 class Entity : public DrawableObject

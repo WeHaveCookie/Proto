@@ -63,6 +63,7 @@ bool Engine::isAbleToMove(sf::FloatRect box)
                    std::cout << "Char : [x=" << box.left << ";y=" << box.top << ";width=" << box.width << ";height=" << box.height <<  "]" << std::endl;
                    std::cout << "Tile : [x=" << (*it)->getGlobalBounds().left << ";y=" << (*it)->getGlobalBounds().top << ";width=" << (*it)->getGlobalBounds().width << ";height=" << (*it)->getGlobalBounds().height << "]" << std::endl;
                }
+               return false;
            }
         }
     }
@@ -70,6 +71,7 @@ bool Engine::isAbleToMove(sf::FloatRect box)
     {
         std::cout << "Pas de collision " << std::endl;
     }
+    return true;
 }
 
 /**

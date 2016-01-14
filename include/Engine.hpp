@@ -14,6 +14,7 @@ class Engine
         bool collisionAABB(sf::FloatRect box1, sf::FloatRect box2);
         bool isAbleToMove(sf::FloatRect box);
         bool isAbleToJump(sf::FloatRect box);
+        inline sf::Vector2f getUniverseSize() {return m_universe->getBoundary().getSize();}
     protected:
     private:
         std::shared_ptr<Quadtree> m_universe;
