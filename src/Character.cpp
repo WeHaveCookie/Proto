@@ -12,6 +12,7 @@
 Character::Character(std::string path, sf::IntRect textRect, sf::Vector2f initPos, std::shared_ptr<Engine> engine) :
 Entity(path,textRect,initPos,engine)
 {
+
 }
 
 /**
@@ -28,3 +29,4 @@ Character::~Character()
 {
     //dtor
 }
+

@@ -16,9 +16,9 @@ int main()
     //Creation d'un personnage
     std::shared_ptr<Quadtree> world = std::make_shared<Quadtree>(Quadtree(0.0f,0.0f,window->getSize().x,window->getSize().y));
     std::shared_ptr<Engine> engine = std::make_shared<Engine>(Engine(world));
-    std::shared_ptr<Character> player = std::make_shared<Character>(Character("player.png",sf::IntRect(13,9,51,45),sf::Vector2f(20,20),engine));
-
+    Character* player = new Character("player.png",sf::IntRect(13,9,51,45),sf::Vector2f(20,20),engine);
     //Pour la creation de case random
+    //Character player = Character("player.png",sf::IntRect(13,9,51,45),sf::Vector2f(20,20),engine);
     srand(time(NULL));
     bool m_add = true;
 
@@ -26,6 +26,11 @@ int main()
     if(!txt.loadFromFile(defaultTilePath+"Tileset.png")){
         //RAISE A LOAD TEXTURE EXCEPTION
     }
+    sf::Sprite spr;
+    spr.setTexture(txt);
+    spr.setTextureRect(sf::IntRect(416,192,SPRITE_HEIGHT,SPRITE_WIDTH));
+    spr.setPosition(30,100);
+    world->add(spr);
     while (window->isOpen())
     {
         // On catch les events
@@ -75,6 +80,9 @@ int main()
                                 std::cout << "WORLD DELETE" << std::endl;
                                 world = std::make_shared<Quadtree>(Quadtree(0.0f,0.0f,window->getSize().x,window->getSize().y));
                                 std::cout << "New world create" << std::endl;
+                                break;
+                            case sf::Keyboard::X :
+                                std::cout << "Position of player : x = " << player->getPosition().x << "y : " << player->getPosition().y << std::endl;
                                 break;
                             default :
                                 break;
@@ -160,14 +168,13 @@ int main()
             player->move(sf::Vector2f(0,5));
         }
 
-
         window->clear();
         player->draw(window);
         world->draw(window);
         window->display();
     }
 
-    player.reset();
+    //player.reset();
     world.reset();
     delete window;
     return 0;
